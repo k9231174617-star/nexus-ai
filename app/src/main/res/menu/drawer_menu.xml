@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <!-- Группа: Главные агенты -->
+    <group
+        android:id="@+id/group_agents"
+        android:checkableBehavior="single">
+        
+        <item
+            android:id="@+id/nav_main_agent"
+            android:icon="@drawable/ic_main_agent"
+            android:title="@string/menu_main_agent"
+            android:checked="true" />
+        
+        <item
+            android:id="@+id/nav_code_agent"
+            android:icon="@drawable/ic_code_agent"
+            android:title="@string/menu_code_agent" />
+        
+        <item
+            android:id="@+id/nav_universal_agent"
+            android:icon="@drawable/ic_universal"
+            android:title="@string/menu_universal_agent" />
+    </group>
+
+    <!-- Разделитель -->
+    <item
+        android:title="@string/menu_tools"
+        android:enabled="false">
+        <menu>
+            <item
+                android:id="@+id/nav_cli"
+                android:icon="@drawable/ic_cli"
+                android:title="@string/menu_cli" />
+            
+            <item
+                android:id="@+id/nav_files"
+                android:icon="@drawable/ic_files"
+                android:title="@string/menu_files" />
+            
+            <item
+                android:id="@+id/nav_memory"
+                android:icon="@drawable/ic_memory"
+                android:title="@string/menu_memory" />
+            
+            <item
+                android:id="@+id/nav_planner"
+                android:icon="@drawable/ic_planner"
+                android:title="@string/menu_planner" />
+            
+            <item
+                android:id="@+id/nav_sandbox"
+                android:icon="@drawable/ic_sandbox"
+                android:title="@string/menu_sandbox" />
+            
+            <item
+                android:id="@+id/nav_browser"
+                android:icon="@drawable/ic_browser"
+                android:title="@string/menu_browser" />
+            
+            <item
+                android:id="@+id/nav_rag"
+                android:icon="@drawable/ic_rag"
+                android:title="@string/menu_rag" />
+            
+            <item
+                android:id="@+id/nav_graph"
+                android:icon="@drawable/ic_graph"
+                android:title="@string/menu_graph" />
+            
+            <item
+                android:id="@+id/nav_observability"
+                android:icon="@drawable/ic_observability"
+                android:title="@string/menu_observability" />
+        </menu>
+    </item>
+
+    <!-- Разделитель: Система -->
+    <item
+        android:title="@string/menu_system"
+        android:enabled="false">
+        <menu>
+            <item
+                android:id="@+id/nav_settings"
+                android:icon="@drawable/ic_settings"
+                android:title="@string/menu_settings" />
+            
+            <item
+                android:id="@+id/nav_about"
+                android:icon="@drawable/ic_nexus_logo"
+                android:title="@string/menu_about" />
+        </menu>
+    </item>
+
+</menu>

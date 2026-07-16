@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <!-- Поиск -->
+    <item
+        android:id="@+id/action_search"
+        android:icon="@android:drawable/ic_menu_search"
+        android:title="@string/action_search"
+        app:showAsAction="ifRoom|collapseActionView"
+        app:actionViewClass="androidx.appcompat.widget.SearchView" />
+
+    <!-- Новый чат -->
+    <item
+        android:id="@+id/action_new_chat"
+        android:icon="@drawable/ic_main_agent"
+        android:title="@string/action_new_chat"
+        app:showAsAction="ifRoom" />
+
+    <!-- Очистить историю -->
+    <item
+        android:id="@+id/action_clear_history"
+        android:title="@string/action_clear_history"
+        app:showAsAction="never" />
+
+    <!-- Экспорт чата -->
+    <item
+        android:id="@+id/action_export_chat"
+        android:title="@string/action_export_chat"
+        app:showAsAction="never" />
+
+    <!-- Режим root -->
+    <item
+        android:id="@+id/action_root_mode"
+        android:title="@string/action_root_mode"
+        android:checkable="true"
+        app:showAsAction="never" />
+
+    <!-- Настройки LLM -->
+    <item
+        android:id="@+id/action_llm_settings"
+        android:title="@string/action_llm_settings"
+        app:showAsAction="never" />
+
+    <!-- О приложении -->
+    <item
+        android:id="@+id/action_about"
+        android:title="@string/action_about"
+        app:showAsAction="never" />
+
+</menu>

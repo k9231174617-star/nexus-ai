@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    
+    <!-- Document base -->
+    <path
+        android:fillColor="#0A0A0A"
+        android:strokeColor="#FF3333"
+        android:strokeWidth="1.5"
+        android:pathData="M4,2 L16,2 L20,6 L20,22 L4,22 Z" />
+    
+    <!-- Folded corner -->
+    <path
+        android:fillColor="#FF3333"
+        android:pathData="M16,2 L16,6 L20,6 Z" />
+    
+    <!-- Text lines -->
+    <path
+        android:strokeColor="#FF1A1A"
+        android:strokeWidth="1.5"
+        android:strokeLineCap="round"
+        android:pathData="M7,9 L17,9" />
+    <path
+        android:strokeColor="#FF1A1A"
+        android:strokeWidth="1.5"
+        android:strokeLineCap="round"
+        android:pathData="M7,12 L15,12" />
+    <path
+        android:strokeColor="#FF1A1A"
+        android:strokeWidth="1.5"
+        android:strokeLineCap="round"
+        android:pathData="M7,15 L17,15" />
+    <path
+        android:strokeColor="#FF1A1A"
+        android:strokeWidth="1.5"
+        android:strokeLineCap="round"
+        android:pathData="M7,18 L12,18" />
+    
+    <!-- Magnifying glass -->
+    <path
+        android:strokeColor="#FF3333"
+        android:strokeWidth="1.5"
+        android:fillColor="#00000000"
+        android:pathData="M18,16 A3,3 0 1,1 18,22 A3,3 0 1,1 18,16" />
+    <path
+        android:strokeColor="#FF3333"
+        android:strokeWidth="1.5"
+        android:strokeLineCap="round"
+        android:pathData="M20,20 L23,23" />
+    
+    <!-- Vector arrows -->
+    <path
+        android:strokeColor="#FF1A1A"
+        android:strokeWidth="1"
+        android:pathData="M2,6 L4,4" />
+    <path
+        android:fillColor="#FF1A1A"
+        android:pathData="M4,4 L3.5,5.5 L2,6 L4,4 Z" />
+</vector>

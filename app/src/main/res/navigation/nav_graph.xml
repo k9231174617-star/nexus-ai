@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/mainAgentFragment">
+
+    <fragment
+        android:id="@+id/mainAgentFragment"
+        android:name="com.nexus.agent.ui.main.MainAgentFragment"
+        android:label="@string/menu_main_agent"
+        tools:layout="@layout/fragment_main_agent" />
+
+    <fragment
+        android:id="@+id/codeAgentFragment"
+        android:name="com.nexus.agent.ui.code.CodeAgentFragment"
+        android:label="@string/menu_code_agent"
+        tools:layout="@layout/fragment_code_agent" />
+
+    <fragment
+        android:id="@+id/universalAgentFragment"
+        android:name="com.nexus.agent.ui.universal.UniversalAgentFragment"
+        android:label="@string/menu_universal_agent"
+        tools:layout="@layout/fragment_universal_agent" />
+
+    <fragment
+        android:id="@+id/cliFragment"
+        android:name="com.nexus.agent.ui.cli.CLIFragment"
+        android:label="@string/menu_cli"
+        tools:layout="@layout/fragment_cli" />
+
+    <fragment
+        android:id="@+id/filesFragment"
+        android:name="com.nexus.agent.ui.files.FilesFragment"
+        android:label="@string/menu_files"
+        tools:layout="@layout/fragment_files" />
+
+    <fragment
+        android:id="@+id/memoryFragment"
+        android:name="com.nexus.agent.ui.memory.MemoryFragment"
+        android:label="@string/menu_memory"
+        tools:layout="@layout/fragment_memory" />
+
+    <fragment
+        android:id="@+id/plannerFragment"
+        android:name="com.nexus.agent.ui.planner.PlannerFragment"
+        android:label="@string/menu_planner"
+        tools:layout="@layout/fragment_planner" />
+
+    <fragment
+        android:id="@+id/sandboxFragment"
+        android:name="com.nexus.agent.ui.sandbox.SandboxFragment"
+        android:label="@string/menu_sandbox"
+        tools:layout="@layout/fragment_sandbox" />
+
+    <fragment
+        android:id="@+id/browserFragment"
+        android:name="com.nexus.agent.ui.browser.BrowserFragment"
+        android:label="@string/menu_browser"
+        tools:layout="@layout/fragment_browser" />
+
+    <fragment
+        android:id="@+id/ragFragment"
+        android:name="com.nexus.agent.ui.rag.RAGFragment"
+        android:label="@string/menu_rag"
+        tools:layout="@layout/fragment_rag" />
+
+    <fragment
+        android:id="@+id/graphFragment"
+        android:name="com.nexus.agent.ui.graph.GraphFragment"
+        android:label="@string/menu_graph"
+        tools:layout="@layout/fragment_graph" />
+
+    <fragment
+        android:id="@+id/observabilityFragment"
+        android:name="com.nexus.agent.ui.observability.ObservabilityFragment"
+        android:label="@string/menu_observability"
+        tools:layout="@layout/fragment_observability" />
+
+    <fragment
+        android:id="@+id/settingsFragment"
+        android:name="com.nexus.agent.ui.settings.SettingsFragment"
+        android:label="@string/menu_settings"
+        tools:layout="@layout/fragment_settings" />
+</navigation>

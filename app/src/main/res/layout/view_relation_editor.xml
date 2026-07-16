@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout 
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:background="@drawable/bg_card_dark">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <TextView
+            android:id="@+id/tvEditorTitle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Relation Editor"
+            android:textColor="@color/text_primary"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+
+        <ImageButton
+            android:id="@+id/btnCancelEditor"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:src="@drawable/ic_close"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:tint="@color/text_secondary" />
+    </LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/divider"
+        android:layout_marginVertical="12dp" />
+
+    <TextView
+        android:id="@+id/tvSourceNode"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="From: (select source)"
+        android:textColor="@color/accent_cyan"
+        android:textSize="14sp"
+        android:padding="12dp"
+        android:background="@drawable/bg_input_dark"
+        android:layout_marginBottom="8dp" />
+
+    <TextView
+        android:id="@+id/tvTargetNode"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="To: (select target)"
+        android:textColor="@color/accent_orange"
+        android:textSize="14sp"
+        android:padding="12dp"
+        android:background="@drawable/bg_input_dark"
+        android:layout_marginBottom="8dp" />
+
+    <Button
+        android:id="@+id/btnSelectTarget"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Select Target Entity"
+        android:textColor="@color/text_primary"
+        android:backgroundTint="@color/accent_blue"
+        android:layout_marginBottom="12dp" />
+
+    <AutoCompleteTextView
+        android:id="@+id/actvRelationType"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:hint="Relation type (e.g., works_at, knows)"
+        android:textColor="@color/text_primary"
+        android:textColorHint="@color/text_secondary"
+        android:background="@drawable/bg_input_dark"
+        android:paddingHorizontal="16dp"
+        android:textSize="14sp"
+        android:layout_marginBottom="12dp" />
+
+    <EditText
+        android:id="@+id/etRelationProperties"
+        android:layout_width="match_parent"
+        android:layout_height="120dp"
+        android:hint="Properties (key=value per line)"
+        android:textColor="@color/text_primary"
+        android:textColorHint="@color/text_secondary"
+        android:background="@drawable/bg_input_dark"
+        android:padding="16dp"
+        android:textSize="14sp"
+        android:gravity="top"
+        android:inputType="textMultiLine"
+        android:layout_marginBottom="16dp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/btnSaveRelation"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Save"
+            android:textColor="@color/text_primary"
+            android:backgroundTint="@color/accent_green"
+            android:layout_marginEnd="8dp" />
+
+        <Button
+            android:id="@+id/btnDeleteRelation"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Delete"
+            android:textColor="@color/text_primary"
+            android:backgroundTint="@color/accent_red"
+            android:visibility="gone" />
+    </LinearLayout>
+
+</LinearLayout>

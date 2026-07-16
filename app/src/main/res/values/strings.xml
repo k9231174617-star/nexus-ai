@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">NEXUS AI</string>
+    <string name="app_tagline">Autonomous Agent Platform</string>
+
+    <!-- Navigation -->
+    <string name="nav_main_agent">Main Agent</string>
+    <string name="nav_code_agent">Code Agent</string>
+    <string name="nav_universal">Universal Agent</string>
+    <string name="nav_cli">CLI Terminal</string>
+    <string name="nav_files">File Manager</string>
+    <string name="nav_memory">Session Memory</string>
+    <string name="nav_planner">Task Planner</string>
+    <string name="nav_sandbox">Code Sandbox</string>
+    <string name="nav_browser">Browser Agent</string>
+    <string name="nav_rag">RAG System</string>
+    <string name="nav_graph">Graph Memory</string>
+    <string name="nav_observability">Observability</string>
+    <string name="nav_settings">Settings</string>
+
+    <!-- Agent status -->
+    <string name="status_active">Agent Active</string>
+    <string name="status_idle">Agent Idle</string>
+    <string name="status_error">Agent Error</string>
+    <string name="status_root">ROOT MODE</string>
+
+    <!-- Chat -->
+    <string name="hint_message_input">Введите запрос или команду…</string>
+    <string name="btn_send">Send</string>
+    <string name="btn_attach">Attach file</string>
+    <string name="btn_voice">Voice input</string>
+    <string name="btn_clear_chat">Clear chat</string>
+    <string name="btn_export">Export</string>
+
+    <!-- Context modes -->
+    <string name="ctx_auto">Auto</string>
+    <string name="ctx_code">Code</string>
+    <string name="ctx_file">File</string>
+    <string name="ctx_shell">Shell</string>
+    <string name="ctx_apk">APK</string>
+
+    <!-- Settings -->
+    <string name="settings_api_key">API Key</string>
+    <string name="settings_endpoint">Custom Endpoint</string>
+    <string name="settings_main_model">Main Agent Model</string>
+    <string name="settings_code_model">Code Agent Model</string>
+    <string name="settings_uni_model">Universal Agent Model</string>
+    <string name="settings_stream">Stream Responses</string>
+    <string name="settings_auto_cli">Auto-execute CLI</string>
+    <string name="settings_root_mode">Root Mode</string>
+    <string name="settings_save_history">Save History</string>
+    <string name="settings_max_tokens">Max Context Tokens</string>
+    <string name="settings_temperature">Temperature</string>
+    <string name="btn_save_settings">Save Settings</string>
+    <string name="btn_clear_data">Clear All Data</string>
+
+    <!-- CLI -->
+    <string name="hint_cli_input">Enter command…</string>
+    <string name="cli_user_badge">USER</string>
+    <string name="cli_root_badge">ROOT</string>
+
+    <!-- Memory -->
+    <string name="memory_empty">История сессии пуста</string>
+    <string name="hint_inject_context">Добавить контекст в следующий запрос…</string>
+    <string name="btn_inject">Inject Context</string>
+
+    <!-- Files -->
+    <string name="btn_new_folder">New folder</string>
+    <string name="btn_upload">Upload</string>
+    <string name="btn_analyze_ai">Анализировать AI</string>
+    <string name="btn_share">Поделиться</string>
+    <string name="btn_delete">Удалить</string>
+
+    <!-- Errors -->
+    <string name="error_no_root">Root access not available</string>
+    <string name="error_api_key_missing">API key not configured</string>
+    <string name="error_network">Network error</string>
+    <string name="error_timeout">Request timed out</string>
+    <string name="error_permission">Permission denied</string>
+
+    <!-- Toast messages -->
+    <string name="toast_saved">Saved ✓</string>
+    <string name="toast_copied">Copied to clipboard</string>
+    <string name="toast_exported">Exported successfully</string>
+    <string name="toast_chat_cleared">Chat cleared</string>
+    <string name="toast_context_injected">Context injected ✓</string>
+    <string name="toast_root_granted">Root access granted ✓</string>
+
+    <!-- Menu / Navigation -->
+    <string name="app_name">Nexus AI</string>
+    <string name="menu_main_agent">Main Agent</string>
+    <string name="menu_code_agent">Code Agent</string>
+    <string name="menu_universal_agent">Universal Agent</string>
+    <string name="menu_tools">Tools</string>
+    <string name="menu_cli">CLI Terminal</string>
+    <string name="menu_files">File Manager</string>
+    <string name="menu_memory">Memory</string>
+    <string name="menu_planner">Planner</string>
+    <string name="menu_sandbox">Sandbox</string>
+    <string name="menu_browser">Browser</string>
+    <string name="menu_rag">RAG Search</string>
+    <string name="menu_graph">Graph</string>
+    <string name="menu_observability">Observability</string>
+    <string name="menu_system">System</string>
+    <string name="menu_settings">Settings</string>
+    <string name="menu_about">About</string>
+
+
+    <!-- Topbar actions -->
+    <string name="action_search">Search</string>
+    <string name="action_new_chat">New Chat</string>
+    <string name="action_clear_history">Clear History</string>
+    <string name="action_export_chat">Export Chat</string>
+    <string name="action_root_mode">Root Mode</string>
+    <string name="action_llm_settings">LLM Settings</string>
+    <string name="action_about">About</string>
+
+    <!-- Files menu -->
+    <string name="new_folder">New Folder</string>
+    <string name="refresh">Refresh</string>
+    <string name="search">Search</string>
+    <string name="select_all">Select All</string>
+    <string name="show_hidden">Show Hidden</string>
+    <string name="sort">Sort</string>
+    <string name="view_mode">View Mode</string>
+    <string name="view_grid">Grid</string>
+    <string name="view_list">List</string>
+    <string name="view_details">Details</string>
+    <string name="sort_name_asc">Name (A-Z)</string>
+    <string name="sort_name_desc">Name (Z-A)</string>
+    <string name="sort_date_newest">Date (Newest)</string>
+    <string name="sort_date_oldest">Date (Oldest)</string>
+    <string name="sort_size_largest">Size (Largest)</string>
+    <string name="sort_size_smallest">Size (Smallest)</string>
+
+    <!-- System -->
+    <string name="appbar_scrolling_view_behavior">com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior</string>
+
+</resources>

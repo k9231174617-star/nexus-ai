@@ -1,0 +1,324 @@
+/* ============================================================
+   NEXUS AI — Chat Engine
+   Supports: Main Agent, Code Agent, Universal Agent
+   ============================================================ */
+
+'use strict';
+
+// ── Config ─────────────────────────────────────────────────
+const CHAT_CONFIG = {
+  maxHistory: 20,
+  stream: true,
+};
+
+// Conversation histories per agent
+const histories = { main: [], code: [], universal: [] };
+
+// ── System Prompts ─────────────────────────────────────────
+const SYSTEM_PROMPTS = {
+  main: `You are NEXUS AI — a powerful mobile AI agent running on Android. 
+You help users with: code analysis, shell commands, file operations, APK manipulation, media processing.
+Be concise and technical. Use markdown for code blocks. Answer in the language the user writes in.`,
+
+  code: `You are NEXUS Code Agent — specialized in Android development, Kotlin, Java, and APK analysis.
+When asked about code, provide complete working implementations.
+Format code in markdown code blocks with language tags.`,
+
+  universal: `You are NEXUS Universal Agent — specialized in media processing, document analysis, and creative tasks.
+Help users analyze images, create videos, edit documents, and process media files.`
+};
+
+// ── Main Chat ──────────────────────────────────────────────
+const sendBtn  = document.getElementById('sendBtn');
+const chatInput = document.getElementById('chatInput');
+const chatMessages = document.getElementById('chatMessages');
+
+sendBtn?.addEventListener('click', () => sendMainChat());
+chatInput?.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendMainChat();
+  }
+});
+
+async function sendMainChat() {
+  const text = chatInput?.value.trim();
+  if (!text) return;
+
+  chatInput.value = '';
+  chatInput.style.height = 'auto';
+
+  appendMessage(chatMessages, 'user', escapeHtml(text));
+  addMemoryEntry?.('user', text);
+
+  // Prepend injected context
+  let prompt = text;
+  if (AppState.injectedContext) {
+    prompt = `[Context: ${AppState.injectedContext}]\n\n${text}`;
+    AppState.injectedContext = null;
+  }
+
+  const typingEl = showTyping(chatMessages);
+  const t0 = Date.now();
+
+  try {
+    histories.main.push({ role: 'user', content: prompt });
+    if (histories.main.length > CHAT_CONFIG.maxHistory * 2) {
+      histories.main = histories.main.slice(-CHAT_CONFIG.maxHistory);
+    }
+
+    const reply = await callAPI(histories.main, 'main');
+    histories.main.push({ role: 'assistant', content: reply });
+
+    const latency = Date.now() - t0;
+    updateLatency(latency);
+    removeTyping(typingEl);
+    appendMessage(chatMessages, 'assistant', markdownToHtml(reply));
+    addMemoryEntry?.('agent', reply.slice(0, 80));
+    updateTokenCount(estimateTokens(text + reply));
+
+  } catch (err) {
+    removeTyping(typingEl);
+    appendMessage(chatMessages, 'assistant', `<span style="color:#FF4466">Error: ${escapeHtml(err.message)}</span>`);
+  }
+}
+
+// ── Code Chat ──────────────────────────────────────────────
+const codeSendBtn = document.getElementById('codeSendBtn');
+const codeInput   = document.getElementById('codeInput');
+const miniChat    = document.getElementById('miniChat');
+
+codeSendBtn?.addEventListener('click', () => sendCodeChat());
+codeInput?.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendCodeChat();
+  }
+});
+
+async function sendCodeChat() {
+  const text = codeInput?.value.trim();
+  if (!text) return;
+
+  codeInput.value = '';
+  codeInput.style.height = 'auto';
+
+  // Get current editor content as context
+  const editorContent = document.getElementById('codeEditor')?.innerText || '';
+  const prompt = `Current file:\n\`\`\`kotlin\n${editorContent.slice(0, 2000)}\n\`\`\`\n\nQuestion: ${text}`;
+
+  const userDiv = document.createElement('div');
+  userDiv.className = 'message user-msg mini';
+  userDiv.innerHTML = `<div class="msg-content"><div class="msg-text">${escapeHtml(text)}</div></div>`;
+  miniChat?.appendChild(userDiv);
+
+  const typingEl = showTyping(miniChat);
+
+  try {
+    histories.code.push({ role: 'user', content: prompt });
+
+    const reply = await callAPI(histories.code, 'code');
+    histories.code.push({ role: 'assistant', content: reply });
+
+    removeTyping(typingEl);
+
+    const replyDiv = document.createElement('div');
+    replyDiv.className = 'message assistant-msg mini';
+    replyDiv.innerHTML = `<div class="msg-content"><div class="msg-text">${markdownToHtml(reply)}</div></div>`;
+    miniChat?.appendChild(replyDiv);
+    miniChat.scrollTop = miniChat.scrollHeight;
+
+  } catch (err) {
+    removeTyping(typingEl);
+    const errDiv = document.createElement('div');
+    errDiv.className = 'message assistant-msg mini';
+    errDiv.innerHTML = `<div class="msg-content"><div class="msg-text" style="color:#FF4466">Error: ${escapeHtml(err.message)}</div></div>`;
+    miniChat?.appendChild(errDiv);
+  }
+}
+
+// ── Universal Chat ─────────────────────────────────────────
+const uniSendBtn   = document.getElementById('uniSendBtn');
+const uniInput     = document.getElementById('uniInput');
+const uniChatMsgs  = document.getElementById('uniChatMessages');
+
+uniSendBtn?.addEventListener('click', () => sendUniChat());
+uniInput?.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendUniChat();
+  }
+});
+
+async function sendUniChat() {
+  const text = uniInput?.value.trim();
+  if (!text) return;
+
+  uniInput.value = '';
+  appendMessage(uniChatMsgs, 'user', escapeHtml(text));
+
+  const typingEl = showTyping(uniChatMsgs);
+
+  try {
+    histories.universal.push({ role: 'user', content: text });
+
+    const reply = await callAPI(histories.universal, 'universal');
+    histories.universal.push({ role: 'assistant', content: reply });
+
+    removeTyping(typingEl);
+    appendMessage(uniChatMsgs, 'assistant', markdownToHtml(reply));
+
+  } catch (err) {
+    removeTyping(typingEl);
+    appendMessage(uniChatMsgs, 'assistant', `<span style="color:#FF4466">Error: ${escapeHtml(err.message)}</span>`);
+  }
+}
+
+// ── API Call ───────────────────────────────────────────────
+async function callAPI(messages, agentType) {
+  const settings = loadSettings();
+  const useCustom = settings.apiKey && settings.apiKey.length > 10;
+
+  if (useCustom) {
+    return callCustomAPI(messages, agentType, settings);
+  } else {
+    return callDemoAPI(messages, agentType);
+  }
+}
+
+async function callCustomAPI(messages, agentType, settings) {
+  const modelMap = {
+    main: settings.mainModel || 'gpt-4o-mini',
+    code: settings.codeModel || 'gpt-4o-mini',
+    universal: settings.uniModel || 'gpt-4o-mini'
+  };
+
+  const endpoint = settings.endpoint || 'https://api.openai.com/v1/chat/completions';
+  const model = modelMap[agentType];
+
+  const res = await fetch(endpoint, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${settings.apiKey}`
+    },
+    body: JSON.stringify({
+      model,
+      messages: [
+        { role: 'system', content: SYSTEM_PROMPTS[agentType] },
+        ...messages.slice(-16)
+      ],
+      temperature: settings.temperature || 0.7,
+      max_tokens: 1500,
+      stream: false
+    })
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error?.message || `API Error ${res.status}`);
+  }
+
+  const data = await res.json();
+  return data.choices?.[0]?.message?.content || 'No response';
+}
+
+// Demo responses when no API key is set
+async function callDemoAPI(messages, agentType) {
+  await new Promise(r => setTimeout(r, 600 + Math.random() * 800));
+
+  const last = messages[messages.length - 1]?.content || '';
+  const lower = last.toLowerCase();
+
+  const demos = {
+    help: '**Available commands:**\n\n`chat` — Natural language conversation\n`code` — Code generation & analysis\n`shell` — Execute terminal commands\n`files` — Browse & manage files\n`apk` — APK decompilation/recompilation\n\n_Connect an API key in Settings for full AI capabilities._',
+    code: '```kotlin\nclass NexusAgent(\n    private val llm: LLMBridge,\n    private val cli: CLIExecutor\n) {\n    suspend fun execute(prompt: String): String {\n        val context = buildContext()\n        return llm.generate(prompt, context)\n    }\n}\n```',
+    file: '**File Manager** ready.\n\nI can help you:\n- Read and analyze files\n- Search for patterns in code\n- Extract APK resources\n- Convert between formats',
+    default: [
+      'I\'m NEXUS AI — running in **demo mode**. Add your API key in Settings to unlock full capabilities.',
+      'Connect an API key to enable real AI responses. I support OpenAI, Claude, and any OpenAI-compatible endpoint.',
+      '**NEXUS** is ready. For full functionality:\n1. Go to Settings\n2. Enter your API key\n3. Select your model\n\nDemo mode uses pre-generated responses.'
+    ]
+  };
+
+  if (lower.includes('help') || lower.includes('команд')) return demos.help;
+  if (lower.includes('код') || lower.includes('code') || lower.includes('kotlin')) return demos.code;
+  if (lower.includes('файл') || lower.includes('file')) return demos.file;
+
+  const arr = demos.default;
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+// ── Typing Indicator ───────────────────────────────────────
+function showTyping(container) {
+  const div = document.createElement('div');
+  div.className = 'message assistant-msg typing-msg';
+  div.innerHTML = `
+    <div class="msg-avatar">
+      <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+        <circle cx="14" cy="14" r="13" fill="#1A0A0F" stroke="#FF0A2F" stroke-width="1"/>
+        <circle cx="14" cy="14" r="5" fill="#FF0A2F" opacity="0.5"/>
+      </svg>
+    </div>
+    <div class="msg-content">
+      <div class="typing-indicator">
+        <span class="typing-dot"></span>
+        <span class="typing-dot"></span>
+        <span class="typing-dot"></span>
+      </div>
+    </div>
+  `;
+  container?.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+  return div;
+}
+
+function removeTyping(el) {
+  el?.remove();
+}
+
+// ── Latency display ────────────────────────────────────────
+function updateLatency(ms) {
+  const el = document.getElementById('apiLatency');
+  if (!el) return;
+  el.textContent = ms < 1000 ? `${ms}ms` : `${(ms/1000).toFixed(1)}s`;
+  AppState.apiLatency = ms;
+}
+
+// ── Helpers ────────────────────────────────────────────────
+function escapeHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function markdownToHtml(text) {
+  return text
+    // Code blocks
+    .replace(/```(\w+)?\n([\s\S]*?)```/g, (_, lang, code) =>
+      `<pre style="background:#05050D;border:1px solid rgba(255,10,47,0.2);border-radius:8px;padding:12px 14px;overflow-x:auto;margin:8px 0;font-family:var(--font-mono);font-size:12px;line-height:1.6;color:#AAAACC"><code>${escapeHtml(code.trim())}</code></pre>`
+    )
+    // Inline code
+    .replace(/`([^`]+)`/g, '<code style="background:#1A0A0F;border:1px solid rgba(255,10,47,0.2);border-radius:4px;padding:1px 5px;font-family:var(--font-mono);font-size:0.88em;color:#FF8899">$1</code>')
+    // Bold
+    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+    // Italic
+    .replace(/\*([^*]+)\*/g, '<em>$1</em>')
+    // Headings
+    .replace(/^### (.+)$/gm, '<h4 style="color:#FF3355;font-size:13px;margin:8px 0 4px;font-weight:700">$1</h4>')
+    .replace(/^## (.+)$/gm, '<h3 style="color:#FF3355;font-size:14px;margin:10px 0 5px;font-weight:700">$1</h3>')
+    // Lists
+    .replace(/^- (.+)$/gm, '<div style="padding-left:12px;margin:2px 0">• $1</div>')
+    .replace(/^\d+\. (.+)$/gm, '<div style="padding-left:12px;margin:2px 0">$1</div>')
+    // Line breaks
+    .replace(/\n\n/g, '<br><br>')
+    .replace(/\n/g, '<br>');
+}
+
+function estimateTokens(text) {
+  return Math.ceil(text.length / 4);
+}
+
+function loadSettings() {
+  try {
+    return JSON.parse(localStorage.getItem('nexus_settings') || '{}');
+  } catch { return {}; }
+}

@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    
+    <!-- Head -->
+    <path
+        android:fillColor="#FF3333"
+        android:pathData="M12,2 C14.5,2 16.5,3.5 17.5,5.5 C18,6.5 18.2,7.5 18.2,8.5 L18.2,10 L5.8,10 L5.8,8.5 C5.8,7.5 6,6.5 6.5,5.5 C7.5,3.5 9.5,2 12,2 Z" />
+    
+    <!-- Face screen -->
+    <path
+        android:fillColor="#0A0A0A"
+        android:pathData="M7,7 L17,7 L17,9 L7,9 Z" />
+    
+    <!-- Eyes -->
+    <path
+        android:fillColor="#FF3333"
+        android:pathData="M8.5,7.5 A0.8,0.8 0 1,1 8.5,9.1 A0.8,0.8 0 1,1 8.5,7.5" />
+    <path
+        android:fillColor="#FF3333"
+        android:pathData="M15.5,7.5 A0.8,0.8 0 1,1 15.5,9.1 A0.8,0.8 0 1,1 15.5,7.5" />
+    
+    <!-- Body -->
+    <path
+        android:fillColor="#FF3333"
+        android:pathData="M5,12 L19,12 L18,22 L6,22 Z" />
+    
+    <!-- Chest core -->
+    <path
+        android:fillColor="#FF1A1A"
+        android:pathData="M11,14 L13,14 L13,18 L11,18 Z" />
+    
+    <!-- Antenna -->
+    <path
+        android:strokeColor="#FF1A1A"
+        android:strokeWidth="1.5"
+        android:pathData="M12,2 L12,0" />
+    <path
+        android:fillColor="#FF1A1A"
+        android:pathData="M12,0 A1,1 0 1,1 12,2 A1,1 0 1,1 12,0" />
+</vector>

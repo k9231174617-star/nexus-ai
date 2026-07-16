@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    
+    <!-- Browser window -->
+    <path
+        android:fillColor="#0A0A0A"
+        android:strokeColor="#FF3333"
+        android:strokeWidth="1.5"
+        android:pathData="M2,4 L22,4 L22,20 L2,20 Z" />
+    
+    <!-- Address bar -->
+    <path
+        android:fillColor="#1A0A0A"
+        android:strokeColor="#FF3333"
+        android:strokeWidth="1"
+        android:pathData="M5,6 L19,6 L19,8 L5,8 Z" />
+    
+    <!-- URL line -->
+    <path
+        android:strokeColor="#FF1A1A"
+        android:strokeWidth="1.5"
+        android:strokeLineCap="round"
+        android:pathData="M7,7 L13,7" />
+    
+    <!-- Content area -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#FF3333"
+        android:strokeWidth="1"
+        android:pathData="M5,10 L19,10 L19,18 L5,18 Z" />
+    
+    <!-- Globe symbol -->
+    <path
+        android:strokeColor="#FF3333"
+        android:strokeWidth="1"
+        android:fillColor="#00000000"
+        android:pathData="M12,11 A3,3 0 1,1 12,17 A3,3 0 1,1 12,11" />
+    <path
+        android:strokeColor="#FF3333"
+        android:strokeWidth="1"
+        android:pathData="M9,14 L15,14" />
+    <path
+        android:strokeColor="#FF3333"
+        android:strokeWidth="1"
+        android:pathData="M12,11 L12,17" />
+    
+    <!-- Cursor -->
+    <path
+        android:fillColor="#FF1A1A"
+        android:pathData="M15,12 L16,12 L16,13 L15,13 Z" />
+</vector>

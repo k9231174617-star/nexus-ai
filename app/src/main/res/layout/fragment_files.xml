@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout 
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/background_dark">
+
+    <com.nexus.agent.ui.files.BreadcrumbView
+        android:id="@+id/breadcrumbView"
+        android:layout_width="0dp"
+        android:layout_height="40dp"
+        android:background="@color/surface_dark"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <HorizontalScrollView
+        android:id="@+id/fileTools"
+        android:layout_width="0dp"
+        android:layout_height="44dp"
+        android:background="@color/surface_dark"
+        android:scrollbars="none"
+        app:layout_constraintTop_toBottomOf="@id/breadcrumbView"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingHorizontal="8dp">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnCreateFolder"
+                style="@style/Widget.Material3.Button.TextButton"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:text="New Folder"
+                android:textColor="@color/neon_cyan"
+                android:textSize="11sp"
+                app:icon="@drawable/ic_folder_add"
+                app:iconTint="@color/neon_cyan"
+                app:iconSize="16dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnUpload"
+                style="@style/Widget.Material3.Button.TextButton"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:text="Upload"
+                android:textColor="@color/neon_green"
+                android:textSize="11sp"
+                app:icon="@drawable/ic_upload"
+                app:iconTint="@color/neon_green"
+                app:iconSize="16dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnSearch"
+                style="@style/Widget.Material3.Button.TextButton"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:text="Search"
+                android:textColor="@color/neon_purple"
+                android:textSize="11sp"
+                app:icon="@drawable/ic_search"
+                app:iconTint="@color/neon_purple"
+                app:iconSize="16dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnSort"
+                style="@style/Widget.Material3.Button.TextButton"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:text="Sort"
+                android:textColor="@color/text_secondary"
+                android:textSize="11sp"
+                app:icon="@drawable/ic_sort"
+                app:iconTint="@color/text_secondary"
+                app:iconSize="16dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnSelectAll"
+                style="@style/Widget.Material3.Button.TextButton"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:text="Select"
+                android:textColor="@color/neon_orange"
+                android:textSize="11sp"
+                app:icon="@drawable/ic_select"
+                app:iconTint="@color/neon_orange"
+                app:iconSize="16dp" />
+
+        </LinearLayout>
+
+    </HorizontalScrollView>
+
+    <com.nexus.agent.ui.files.FilesGridView
+        android:id="@+id/filesGridView"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintTop_toBottomOf="@id/fileTools"
+        app:layout_constraintBottom_toTopOf="@id/previewPanel"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <com.nexus.agent.ui.files.FilePreviewPanel
+        android:id="@+id/previewPanel"
+        android:layout_width="0dp"
+        android:layout_height="200dp"
+        android:background="@color/surface_dark"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fabAdd"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="16dp"
+        android:src="@drawable/ic_add"
+        app:backgroundTint="@color/neon_cyan"
+        app:tint="@color/background_dark"
+        app:layout_constraintBottom_toTopOf="@id/previewPanel"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

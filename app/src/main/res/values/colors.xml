@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Core dark backgrounds -->
+    <color name="bg_deep">#080810</color>
+    <color name="bg_base">#0A0A12</color>
+    <color name="bg_card">#111120</color>
+    <color name="bg_card_hover">#181828</color>
+    <color name="bg_input">#0F0F1E</color>
+    <color name="bg_sidebar">#09090F</color>
+    <color name="surface_dark">#09090F</color>
+
+    <!-- Neon Red palette -->
+    <color name="red_core">#FF0A2F</color>
+    <color name="red_bright">#FF3355</color>
+    <color name="red_mid">#CC0A26</color>
+    <color name="red_dim">#881122</color>
+    <color name="red_faint">#1A050A</color>
+
+    <!-- Neon Cyan (for toolbar) -->
+    <color name="neon_cyan">#FF0A2F</color>
+
+    <!-- Text -->
+    <color name="text_primary">#F0F0FF</color>
+    <color name="text_secondary">#8888AA</color>
+    <color name="text_muted">#444466</color>
+    <color name="text_accent">#FF3355</color>
+
+    <!-- Borders -->
+    <color name="border_subtle">#1FFF0A2F</color>
+    <color name="border_mid">#40FF0A2F</color>
+    <color name="border_bright">#80FF0A2F</color>
+
+    <!-- Glow overlays -->
+    <color name="red_glow">#40FF0A2F</color>
+    <color name="red_glow_soft">#1AFF0A2F</color>
+
+    <!-- Status -->
+    <color name="color_success">#44DD88</color>
+    <color name="color_warning">#FFAA00</color>
+    <color name="color_error">#FF4466</color>
+    <color name="color_info">#4499FF</color>
+
+    <!-- Syntax highlighting (original theme) -->
+    <color name="syntax_keyword">#FF4477</color>
+    <color name="syntax_class">#77DDFF</color>
+    <color name="syntax_function">#AADDAA</color>
+    <color name="syntax_string">#FFAA44</color>
+    <color name="syntax_comment">#555570</color>
+    <color name="syntax_default">#C0C0D8</color>
+    <color name="syntax_number">#BD93F9</color>
+
+    <!-- Editor Colors -->
+    <color name="editor_bg">#1A1A2E</color>
+    <color name="line_number">#6272A4</color>
+    <color name="line_number_bg">#16162A</color>
+    <color name="line_number_divider">#2A2A3E</color>
+
+    <!-- Console Colors -->
+    <color name="console_bg">#0D0D1A</color>
+    <color name="console_output">#E0E0E0</color>
+    <color name="console_error">#FF1744</color>
+    <color name="console_system">#00D4FF</color>
+    <color name="console_warning">#FFD600</color>
+    <color name="console_debug">#808080</color>
+    <color name="console_timestamp">#4A4A6A</color>
+
+    <!-- Monitor Colors -->
+    <color name="monitor_bg">#12121E</color>
+    <color name="graph_bg">#0A0A14</color>
+    <color name="graph_cpu">#00E676</color>
+    <color name="graph_memory">#2979FF</color>
+    <color name="graph_grid">#1A1A2E</color>
+
+    <!-- Selector Colors -->
+    <color name="selector_bg">#16162A</color>
+    <color name="chip_bg">#1E1E32</color>
+    <color name="chip_selected_bg">#1A237E</color>
+    <color name="chip_border">#2A2A3E</color>
+
+    <!-- Language Colors -->
+    <color name="lang_python">#3776AB</color>
+    <color name="lang_javascript">#F7DF1E</color>
+    <color name="lang_typescript">#3178C6</color>
+    <color name="lang_kotlin">#7F52FF</color>
+    <color name="lang_java">#E76F00</color>
+    <color name="lang_rust">#DEA584</color>
+    <color name="lang_go">#00ADD8</color>
+    <color name="lang_cpp">#00599C</color>
+    <color name="lang_bash">#4EAA25</color>
+
+    <!-- Browser Module Colors -->
+    <color name="address_bar_bg">#1E1E32</color>
+    <color name="address_bar_border">#2A2A3E</color>
+    <color name="address_bar_focus_border">#00D4FF</color>
+    <color name="loading_overlay">#CC0D0D1A</color>
+    <color name="error_bg">#1A0D0D</color>
+    <color name="touch_indicator">#00D4FF</color>
+
+    <!-- Recorder Colors -->
+    <color name="recorder_bg">#12121E</color>
+    <color name="action_item_bg">#1A1A2E</color>
+    <color name="action_click">#00E676</color>
+    <color name="action_long_click">#FF9100</color>
+    <color name="action_scroll">#2979FF</color>
+    <color name="action_input">#BD93F9</color>
+    <color name="action_navigate">#00D4FF</color>
+
+    <!-- Panel Colors -->
+    <color name="panel_bg">#1A1A2E</color>
+    <color name="panel_border">#2A2A3E</color>
+    <color name="panel_shadow">#40000000</color>
+
+    <!-- Search Result Colors -->
+    <color name="result_item_bg">#16162A</color>
+    <color name="result_title">#E0E0E0</color>
+    <color name="result_url">#00D4FF</color>
+    <color name="result_snippet">#808080</color>
+    <color name="result_border">#2A2A3E</color>
+
+    <!-- Rank Colors -->
+    <color name="rank_gold">#FFD700</color>
+    <color name="rank_silver">#C0C0C0</color>
+    <color name="rank_bronze">#CD7F32</color>
+    <color name="rank_default">#4A4A6A</color>
+
+    <!-- RAG Module Colors -->
+    <color name="upload_zone_bg">#141428</color>
+    <color name="upload_zone_active_bg">#1A1A3E</color>
+    <color name="upload_zone_border">#2A2A4E</color>
+    <color name="document_item_bg">#1A1A2E</color>
+    <color name="document_border">#2A2A3E</color>
+    <color name="chunk_preview_bg">#0D0D1A</color>
+    <color name="chunk_bg">#16162A</color>
+    <color name="chunk_bg_highlighted">#1A237E</color>
+    <color name="chunk_bg_relevant">#0D3320</color>
+    <color name="chunk_border">#2A2A3E</color>
+    <color name="chunk_accent">#4A4A6A</color>
+    <color name="chunk_badge_bg">#2A2A4E</color>
+    <color name="chunk_text">#B0B0D0</color>
+</resources>

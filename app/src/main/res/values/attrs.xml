@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- RangeSliderView -->
+    <declare-styleable name="RangeSliderView">
+        <attr name="minValue" format="float"/>
+        <attr name="maxValue" format="float"/>
+        <attr name="currentMin" format="float"/>
+        <attr name="currentMax" format="float"/>
+        <attr name="stepSize" format="float"/>
+        <attr name="showLabels" format="boolean"/>
+        <attr name="trackColor" format="color"/>
+        <attr name="activeTrackColor" format="color"/>
+        <attr name="thumbColor" format="color"/>
+        <attr name="thumbGlowColor" format="color"/>
+        <attr name="labelColor" format="color"/>
+    </declare-styleable>
+
+    <!-- NeonToggleView -->
+    <declare-styleable name="NeonToggleView">
+        <attr name="checked" format="boolean"/>
+        <attr name="trackOffColor" format="color"/>
+        <attr name="trackOnColor" format="color"/>
+        <attr name="thumbOffColor" format="color"/>
+        <attr name="thumbOnColor" format="color"/>
+        <attr name="glowColor" format="color"/>
+    </declare-styleable>
+</resources>

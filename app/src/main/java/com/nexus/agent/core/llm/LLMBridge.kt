@@ -3,8 +3,6 @@ package com.nexus.agent.core.llm
 import com.nexus.agent.data.remote.LLMAPI
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
-import org.json.JSONArray
-import org.json.JSONObject
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -16,7 +14,7 @@ class LLMBridge @Inject constructor(
     private val promptEngineer: PromptEngineer,
     private val responseParser: ResponseParser,
 ) {
-    fun streamCompletion(
+    suspend fun streamCompletion(
         messages: List<Map<String, String>>,
         systemPrompt: String,
         model: String,

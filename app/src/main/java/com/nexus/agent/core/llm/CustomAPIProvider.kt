@@ -1,10 +1,13 @@
 package com.nexus.agent.core.llm
 
 import com.nexus.agent.data.local.SettingsDao
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
-import okhttp3.*
+import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.OkHttpClient
+import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONArray
 import org.json.JSONObject
@@ -16,9 +19,9 @@ class CustomAPIProvider @Inject constructor(
     private val settingsDao: SettingsDao,
     private val client: OkHttpClient,
 ) {
-    fun isConfigured(): Boolean {
-        val s = settingsDao.getSettingsSync()
-        return !s?.apiKey.isNullOrBlank()
+    suspend fun isConfigured(): Boolean = withContext(Dispatchers.IO) {
+        val s = settingsDao.getSettings()
+        !s?.apiKey.isNullOrBlank()
     }
 
     fun stream(

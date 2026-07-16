@@ -11,7 +11,6 @@ import com.nexus.agent.core.graph.RelationEdge
 import com.nexus.agent.core.graph.GraphDao
 import com.nexus.agent.core.cache.CacheEntry
 import com.nexus.agent.core.cache.CacheDao
-import com.nexus.agent.core.observability.SpanDao
 
 @Database(
     entities = [
@@ -22,8 +21,20 @@ import com.nexus.agent.core.observability.SpanDao
         EntityNode::class,
         RelationEdge::class,
         CacheEntry::class,
+        // Observability
+        SpanEntity::class,
+        TraceEntity::class,
+        MetricEntity::class,
+        BottleneckEntity::class,
+        // Workers
+        WorkerEntity::class,
+        WorkTaskEntity::class,
+        QueueItemEntity::class,
+        // CI/CD
+        PipelineEntity::class,
+        PipelineRunEntity::class,
     ],
-    version = 1,
+    version = 2,
     exportSchema = false,
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -33,4 +44,11 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun plannerDao(): PlannerDao
     abstract fun graphDao(): GraphDao
     abstract fun cacheDao(): CacheDao
+    abstract fun spanDao(): SpanDao
+    abstract fun workerDao(): WorkerDao
+    abstract fun cicdDao(): CICDDao
+    abstract fun sandboxDao(): SandboxDao
+    abstract fun browserDao(): BrowserDao
+    abstract fun ragDao(): RAGDao
+    abstract fun projectDao(): ProjectDao
 }

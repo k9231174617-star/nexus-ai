@@ -194,3 +194,4 @@ if __name__ == "__main__":
         if bot_process.is_alive():
             bot_process.terminate()
             bot_process.join(timeout=5)
+# Force rebuild

@@ -224,6 +224,71 @@ object AppModule {
     @Provides @Singleton
     fun provideFallbackChain(): FallbackChain = FallbackChain()
 
+    // Trading Module
+    @Provides @Singleton
+    fun provideTradingAgent(
+        strategyEngine: com.nexus.agent.core.trading.StrategyEngine,
+        riskManager: com.nexus.agent.core.trading.RiskManager,
+        liveTrader: com.nexus.agent.core.trading.LiveTrader,
+        walletManager: com.nexus.agent.core.trading.WalletManager,
+        performanceTracker: com.nexus.agent.core.trading.PerformanceTrackerImpl,
+        marketDataProvider: com.nexus.agent.core.trading.MarketDataProviderImpl,
+    ): com.nexus.agent.core.trading.TradingAgent =
+        com.nexus.agent.core.trading.TradingAgent(strategyEngine, riskManager, liveTrader, walletManager, performanceTracker, marketDataProvider)
+
+    @Provides @Singleton
+    fun provideStrategyEngine(
+        marketDataProvider: com.nexus.agent.core.trading.MarketDataProviderImpl,
+    ): com.nexus.agent.core.trading.StrategyEngine =
+        com.nexus.agent.core.trading.StrategyEngine(marketDataProvider)
+
+    @Provides @Singleton
+    fun provideRiskManager(): com.nexus.agent.core.trading.RiskManager =
+        com.nexus.agent.core.trading.RiskManager()
+
+    @Provides @Singleton
+    fun provideWalletManager(@ApplicationContext ctx: android.content.Context): com.nexus.agent.core.trading.WalletManager =
+        com.nexus.agent.core.trading.WalletManager(ctx)
+
+    @Provides @Singleton
+    fun provideLiveTrader(
+        walletManager: com.nexus.agent.core.trading.WalletManager,
+        riskManager: com.nexus.agent.core.trading.RiskManager,
+        strategyEngine: com.nexus.agent.core.trading.StrategyEngine,
+        marketDataProvider: com.nexus.agent.core.trading.MarketDataProviderImpl,
+    ): com.nexus.agent.core.trading.LiveTrader =
+        com.nexus.agent.core.trading.LiveTrader(walletManager, riskManager, strategyEngine, marketDataProvider)
+
+    @Provides @Singleton
+    fun providePerformanceTracker(): com.nexus.agent.core.trading.PerformanceTrackerImpl =
+        com.nexus.agent.core.trading.PerformanceTrackerImpl()
+
+    @Provides @Singleton
+    fun provideMarketData(): com.nexus.agent.core.trading.MarketDataProviderImpl =
+        com.nexus.agent.core.trading.MarketDataProviderImpl()
+
+    @Provides @Singleton
+    fun provideBacktester(
+        marketDataProvider: com.nexus.agent.core.trading.MarketDataProviderImpl,
+    ): com.nexus.agent.core.trading.Backtester =
+        com.nexus.agent.core.trading.Backtester(marketDataProvider)
+
+    @Provides @Singleton
+    fun provideSelfLearningPipeline(
+        strategyEngine: com.nexus.agent.core.trading.StrategyEngine,
+        performanceTracker: com.nexus.agent.core.trading.PerformanceTrackerImpl,
+        marketDataProvider: com.nexus.agent.core.trading.MarketDataProviderImpl,
+    ): com.nexus.agent.core.trading.SelfLearningPipeline =
+        com.nexus.agent.core.trading.SelfLearningPipeline(strategyEngine, performanceTracker, marketDataProvider)
+
+    @Provides @Singleton
+    fun provideMemeCoinDetector(): com.nexus.agent.core.trading.MemeCoinDetector =
+        com.nexus.agent.core.trading.MemeCoinDetector()
+
+    @Provides @Singleton
+    fun provideTradingMemory(): com.nexus.agent.core.trading.TradingMemory =
+        com.nexus.agent.core.trading.TradingMemory()
+
     @Provides @Singleton
     fun provideSkillManager(
         mcpClient: com.nexus.agent.core.mcp.MCPClient,

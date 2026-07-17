@@ -115,3 +115,43 @@ Example: `https://officialskills.sh/anthropics/skills/mcp-builder`
 - **Plugin system** in `docs/js/plugins/` with `PluginManager`
 - **MCP Client** in `core/mcp/MCPClient.kt`
 - **Agent Coordinator** in `core/agents/AgentCoordinator.kt`
+
+### 📈 Crypto Trading Agent (Новый модуль v2.0)
+Use when the user asks about crypto trading, backtesting, strategies, market analysis, meme coins.
+
+**Package:** `com.nexus.agent.core.trading`
+**UI:** `com.nexus.agent.ui.trading`
+**Dashboard:** `docs/plugins/trading/plugin.js`
+
+| Файл | Описание |
+|------|----------|
+| `TradingAgent.kt` | Главный оркестратор — управляет циклом торговли |
+| `StrategyEngine.kt` | Поиск и генерация стратегий (скальпинг, свинг, арбитраж) |
+| `RiskManager.kt` | Контроль рисков: макс. позиция, леверидж, дневной лимит |
+| `LiveTrader.kt` | Исполнение сделок через DEX/CEX |
+| `Backtester.kt` | Историческое тестирование с Sharpe, drawdown, profit factor |
+| `WalletManager.kt` | EncryptedSharedPreferences для хранения ключей |
+| `PerformanceTrackerImpl.kt` | Трекинг P&L, win rate, метрики |
+| `MemeCoinDetector.kt` | Поиск новых токенов и анализ мемкоинов |
+| `SelfLearningPipeline.kt` | Ночная оптимизация: кластеризация ошибок |
+| `TradingMemory.kt` | Память успешных/неудачных сделок |
+| `MarketDataProviderImpl.kt` | Цены, OHLCV, ордербуки (CoinGecko/Binance simulation) |
+| `TradingModels.kt` | Все entity, data class, enums, Room-таблицы |
+| `TradingDao.kt` | Room DAO для стратегий, позиций, сигналов |
+| `TradingModule.kt` | Hilt DI модуль |
+| `TradingViewModel.kt` | ViewModel для UI |
+
+**Исправленные баги (v2.0):**
+- Приоритет операторов в MemeCoinDetector (Math.random() * N) вместо Math.random() * (N + 1)
+- Единая сигнатура Backtester.run()
+- SelfLearningPipeline со всему зависимостями
+- Room TypeConverter'ы для коллекций
+- Проверка пустого ключа в WalletManager
+- Extension String.isNativeToken() для DEX/CEX маршрутизации
+
+**API Keys (требуются для реальной торговли):**
+- CoinGecko API (бесплатно)
+- Binance API ключи
+- Moralis/Birdeye для ончейн данных
+- Helius RPC для Solana
+- NewsAPI/GNews для сентимента

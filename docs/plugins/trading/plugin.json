@@ -1,0 +1,9 @@
+{
+  "id": "nexus-trading",
+  "name": "Crypto Trading",
+  "version": "1.0.0",
+  "description": "AI-торговый агент: стратегии, бэктестинг, управление рисками, мемкоины, ончейн-анализ",
+  "author": "Nexus AI",
+  "main": "plugin.js",
+  "hooks": ["sidebar:items", "chat:commands"]
+}

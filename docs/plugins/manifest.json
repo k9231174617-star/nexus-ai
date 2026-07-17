@@ -3,6 +3,7 @@
     "plugins/code-review/plugin.json",
     "plugins/mcp-bridge/plugin.json",
     "plugins/analytics/plugin.json",
-    "plugins/skill-hub/plugin.json"
+    "plugins/skill-hub/plugin.json",
+    "plugins/trading/plugin.json"
   ]
 }

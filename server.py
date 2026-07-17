@@ -42,10 +42,10 @@ def run_dashboard():
 
 
 def run_bot():
-    """Start the Telegram bot."""
+    """Start the Telegram bot in a separate process."""
     bot_path = os.path.join(os.path.dirname(__file__), "bot", "bot.py")
     if not os.path.exists(bot_path):
-        logger.error(f"Bot file not found: {bot_path}")
+        print(f"Bot file not found: {bot_path}")
         return
     
     # Change to bot directory for imports
@@ -53,16 +53,12 @@ def run_bot():
     sys.path.insert(0, bot_dir)
     os.chdir(bot_dir)
     
-    # Create event loop for this thread
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    
     # Import and run bot
     import bot as bot_module
     try:
         bot_module.main()
     except Exception as e:
-        logger.error(f"Bot error: {e}")
+        print(f"Bot error: {e}")
 
 
 if __name__ == "__main__":
@@ -81,9 +77,12 @@ if __name__ == "__main__":
             with open(index_path, "w") as f:
                 f.write("<html><body><h1>Nexus AI</h1><p>Dashboard loading...</p></body></html>")
     
-    # Start bot in background thread
-    bot_thread = threading.Thread(target=run_bot, daemon=True)
-    bot_thread.start()
+    # Start bot in background process
+    bot_process = multiprocessing.Process(target=run_bot, daemon=True)
+    bot_process.start()
     
     # Run dashboard in main thread
-    run_dashboard()
+    try:
+        run_dashboard()
+    finally:
+        bot_process.terminate()

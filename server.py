@@ -11,6 +11,13 @@ from http.server import HTTPServer, SimpleHTTPRequestHandler
 from urllib.parse import urlparse
 from pathlib import Path
 
+# CRITICAL: Use 'spawn' to avoid inheriting parent's event loop
+# This is required for python-telegram-bot signal handlers to work
+try:
+    multiprocessing.set_start_method('spawn', force=True)
+except RuntimeError:
+    pass
+
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger(__name__)
 
@@ -143,7 +150,7 @@ def run_dashboard():
 
 
 def run_bot():
-    """Start the Telegram bot in this process."""
+    """Start the Telegram bot in this process (spawned fresh)."""
     bot_path = os.path.join(os.path.dirname(__file__), "bot", "bot.py")
     if not os.path.exists(bot_path):
         logger.warning(f"Bot file not found: {bot_path}")
@@ -161,11 +168,9 @@ def run_bot():
         
         # Call the bot's main function - it should be async
         if hasattr(bot_module, 'main'):
-            # Run the async main in this process's event loop
+            # Run the async main in a fresh event loop (spawn ensures clean state)
             import asyncio
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-            loop.run_until_complete(bot_module.main())
+            asyncio.run(bot_module.main())
         else:
             logger.error("Bot module has no main() function")
     except Exception as e:
@@ -180,7 +185,7 @@ if __name__ == "__main__":
         logger.warning(f"Dashboard directory not found: {DASHBOARD_DIR}")
         os.makedirs(DASHBOARD_DIR, exist_ok=True)
     
-    # Start bot in separate process (required for signal handlers)
+    # Start bot in separate process (spawn ensures clean event loop for signal handlers)
     bot_process = multiprocessing.Process(target=run_bot, name="TelegramBot", daemon=True)
     bot_process.start()
     logger.info("Telegram bot process started")
@@ -194,4 +199,3 @@ if __name__ == "__main__":
         if bot_process.is_alive():
             bot_process.terminate()
             bot_process.join(timeout=5)
-# Force rebuild

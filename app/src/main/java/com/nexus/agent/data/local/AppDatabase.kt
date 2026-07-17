@@ -34,9 +34,10 @@ import com.nexus.agent.core.cache.CacheDao
         PipelineEntity::class,
         PipelineRunEntity::class,
     ],
-    version = 2,
+    version = 3,
     exportSchema = false,
 )
+@androidx.room.TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
     companion object {
         @Volatile

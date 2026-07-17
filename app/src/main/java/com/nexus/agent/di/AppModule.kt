@@ -84,8 +84,10 @@ object AppModule {
     @Provides fun provideProjectDao(db: AppDatabase): ProjectDao = db.projectDao()
 
     @Provides @Singleton
-    fun provideFreeLLMProvider(client: OkHttpClient): FreeLLMProvider =
-        FreeLLMProvider(client)
+    fun provideFreeLLMProvider(
+        client: OkHttpClient,
+        streamingHandler: com.nexus.agent.core.chat.StreamingHandler,
+    ): FreeLLMProvider = FreeLLMProvider(client, streamingHandler)
 
     @Provides @Singleton
     fun provideCustomAPIProvider(
@@ -107,6 +109,10 @@ object AppModule {
 
 
     @Provides @Singleton
+    fun provideStreamingHandler(client: OkHttpClient): com.nexus.agent.core.chat.StreamingHandler =
+        com.nexus.agent.core.chat.StreamingHandler(client)
+
+    @Provides @Singleton
     fun provideMCPClient(client: OkHttpClient): com.nexus.agent.core.mcp.MCPClient =
         com.nexus.agent.core.mcp.MCPClient(client)
 
@@ -121,9 +127,12 @@ object AppModule {
 
 
     @Provides @Singleton
-    fun provideLlamaJNI(@ApplicationContext ctx: Context): com.nexus.agent.core.llama.LlamaJNI {
+    fun provideLlamaJNI(
+        @ApplicationContext ctx: Context,
+        llmBridge: LLMBridge,
+    ): com.nexus.agent.core.llama.LlamaJNI {
         com.nexus.agent.core.llama.LlamaJNI.loadNative()
-        return com.nexus.agent.core.llama.LlamaJNI(ctx)
+        return com.nexus.agent.core.llama.LlamaJNI(ctx, llmBridge)
     }
 
     @Provides @Singleton
@@ -163,8 +172,9 @@ object AppModule {
     @Provides @Singleton
     fun provideChatEngine(
         bridge: LLMBridge,
-        tokenCounter: TokenCounter,
-    ): ChatEngine = ChatEngine(bridge, tokenCounter)
+        modelRouter: ModelRouter,
+        contextManager: ContextManager,
+    ): ChatEngine = ChatEngine(bridge, modelRouter, contextManager)
 
     @Provides @Singleton
     fun provideContextManager(): ContextManager = ContextManager()
@@ -176,9 +186,7 @@ object AppModule {
     @Provides @Singleton
     fun provideCLIExecutor(): CLIExecutor = CLIExecutor()
 
-    @Provides @Singleton
-    fun provideTaskPlanner(plannerDao: PlannerDao): TaskPlanner =
-        TaskPlanner(plannerDao)
+    // TaskPlanner has @Inject constructor, provided automatically by Hilt
 
     @Provides @Singleton
     fun provideCodeSandbox(@ApplicationContext ctx: Context): CodeSandbox =

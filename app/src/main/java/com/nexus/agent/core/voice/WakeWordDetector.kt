@@ -22,6 +22,7 @@ import javax.inject.Singleton
 class WakeWordDetector @Inject constructor() {
 
     private val app = NexusApplication.instance
+    private var onWakeWordCallback: (() -> Unit)? = null
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private var audioRecord: AudioRecord? = null
 
@@ -80,6 +81,11 @@ class WakeWordDetector @Inject constructor() {
         }
     }
 
+    /** Set callback for when wake word is detected */
+    fun setOnWakeWordCallback(callback: () -> Unit) {
+        onWakeWordCallback = callback
+    }
+
     /** Stop listening */
     fun stopListening() {
         _state.value = State.IDLE
@@ -96,8 +102,9 @@ class WakeWordDetector @Inject constructor() {
     }
 
     private fun onWakeWordDetected() {
-        // Will be handled by VoiceInputManager
-        android.util.Log.i("WakeWord", "Wake word callback triggered")
+        android.util.Log.i("WakeWord", "Wake word detected — delegating to callback")
+        stopListening()
+        onWakeWordCallback?.invoke()
     }
 
     private fun computeEnergy(buffer: ShortArray, read: Int): Double {

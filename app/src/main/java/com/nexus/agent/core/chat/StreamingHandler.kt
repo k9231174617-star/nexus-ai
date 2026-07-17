@@ -68,6 +68,29 @@ class StreamingHandler(private val client: OkHttpClient) {
         }
     }
 
+    fun parseSSEStream(response: okhttp3.Response): kotlinx.coroutines.flow.Flow<String> = kotlinx.coroutines.flow.flow {
+        try {
+            val source = response.body?.source() ?: return@flow
+            while (!source.exhausted()) {
+                val line = source.readUtf8Line() ?: continue
+                if (!line.startsWith("data: ")) continue
+                val data = line.substring(6).trim()
+                if (data == "[DONE]") break
+                try {
+                    val json = org.json.JSONObject(data)
+                    val choices = json.getJSONArray("choices")
+                    if (choices.length() > 0) {
+                        val delta = choices.getJSONObject(0).optJSONObject("delta")
+                        val content = delta?.optString("content", "") ?: ""
+                        if (content.isNotEmpty()) emit(content)
+                    }
+                } catch (_: Exception) {}
+            }
+        } catch (e: java.io.IOException) {
+            // Stream closed
+        }
+    }
+
     sealed class StreamEvent {
         data class Chunk(val content: String) : StreamEvent()
         object Done : StreamEvent()

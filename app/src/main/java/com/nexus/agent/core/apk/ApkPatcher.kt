@@ -3,6 +3,7 @@ package com.nexus.agent.core.apk
 import android.content.Context
 import android.util.Log
 import java.io.File
+import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -122,8 +123,13 @@ class ApkPatcher @Inject constructor(
         pb.redirectErrorStream(true)
         val p = pb.start()
         val out = p.inputStream.bufferedReader().readText()
-        val rc = p.waitFor()
+        val rc = if (p.waitFor(120, TimeUnit.SECONDS)) {
+            p.exitValue()
+        } else {
+            p.destroyForcibly()
+            throw RuntimeException("Command timed out: ${cmd.joinToString(" ")}")
+        }
         Log.i(TAG, "exec ${cmd.joinToString(" ")} rc=$rc output=${out.take(1000)}")
-        if (rc != 0) throw RuntimeException("Command failed: ${cmd.joinToString(" ")}")
+        if (rc != 0) throw RuntimeException("Command failed: ${cmd.joinToString(" ")} rc=$rc")
     }
 }

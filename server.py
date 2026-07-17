@@ -4,6 +4,7 @@ Serves the dashboard UI and runs the Telegram bot concurrently.
 """
 import os
 import sys
+import asyncio
 import threading
 import logging
 from http.server import HTTPServer, SimpleHTTPRequestHandler
@@ -52,9 +53,16 @@ def run_bot():
     sys.path.insert(0, bot_dir)
     os.chdir(bot_dir)
     
+    # Create event loop for this thread
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    
     # Import and run bot
     import bot as bot_module
-    bot_module.main()
+    try:
+        bot_module.main()
+    except Exception as e:
+        logger.error(f"Bot error: {e}")
 
 
 if __name__ == "__main__":

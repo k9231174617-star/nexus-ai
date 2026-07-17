@@ -513,11 +513,8 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 def run():
     """Entry point for multiprocessing spawn - runs the bot."""
-    import asyncio
-    asyncio.run(main())
-
-
-async def main():
+    # This runs app.run_polling() which manages its own event loop
+    # Do NOT use asyncio.run() here - run_polling handles the event loop
     if not BOT_TOKEN:
         logger.error("TELEGRAM_BOT_TOKEN not set!")
         return
@@ -538,7 +535,7 @@ async def main():
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
     logger.info("Starting Nexus AI Telegram Bot...")
-    # run_polling is a blocking call that manages its own event loop internally
+    # run_polling is a blocking call that manages its own event loop
     app.run_polling(drop_pending_updates=True)
 
 

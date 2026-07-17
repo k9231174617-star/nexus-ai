@@ -8,10 +8,10 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy bot files
 COPY bot/bot.py .
-COPY bot/.env.example .env 2>/dev/null || true
 
-# Expose port (Railway needs this for health checks)
+# Copy env example (optional, won't fail if missing)
+COPY bot/.env.example .env.example
+
 EXPOSE 8080
 
-# Run the bot
 CMD ["python", "bot.py"]

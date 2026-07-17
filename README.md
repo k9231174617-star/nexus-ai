@@ -1,47 +1,31 @@
 # Nexus AI
 
-Агентная Android-платформа с поддержкой LLM, CLI, обзора файлов, работы с root-доступом, среды песочницы, браузера, RAG и многое другое.
+Universal AI Agent Dashboard & Android Application.
 
-## Возможности
+**🌐 Web Dashboard:** [https://k9231174617-star.github.io/nexus-ai](https://k9231174617-star.github.io/nexus-ai)
 
-- 🤖 LLM Integration - Поддержка различных провайдеров (OpenAI, Anthropic,自定义 API)
-- 💬 Чат-интерфейс с потоковой обработкой ответов
-- 🖥️ CLI с автодополнением и историей команд
-- 📁 Файловый менеджер с предпросмотром и загрузкой
-- 🔓 Root-интеграция через su
-- 🎨 Обработка изображений и генерация видео
-- 📱 Работа с APK (декомпиляция, редактирование, recompilation)
-- 🧠 Агентская память с векторным поиском
-- 📋 Планировщик задач с графом зависимостей
-- 🏖️ Песочница для выполнения кода
-- 🌐 Браузер-агент для автоматизации веб-задач
-- 📚 RAG система для работы с документами
-- 🕸️ Графовая память с Neo4j
-- 💾 Семантическое кэширование ответов
-- 🤖 Распределённые воркеры
-- 📊 Наблюдаемость: трейсы, метрики, анализ узких мест
-- ⚙️ CI/CD интеграция
+## Features
 
-## Структура проекта
+- **Chat Engine** — Multi-agent chat with LLM support
+- **CLI Terminal** — 30+ commands with root simulation
+- **Code Agent** — Code editor with syntax highlighting, APK tools
+- **File Manager** — Browse, upload, analyze files
+- **Memory** — Session history with vector search
+- **Planner** — Task planning and workflow engine
+- **Sandbox** — Isolated code execution
+- **Browser** — Web view with search and content extraction
+- **RAG** — Document ingestion and retrieval-augmented generation
+- **Graph Memory** — Knowledge graph with Neo4j-style queries
+- **Observability** — Tracing, metrics, bottleneck analysis
+- **CI/CD** — Pipeline management and deployment automation
 
-```
-nexus-ai/
-├── app/                  # Android приложение
-│   ├── src/main/java/    # Kotlin код
-│   ├── src/main/res/     # Ресурсы Android
-│   ├── src/main/jni/     # Нативный код C/C++
-│   └── src/test/         # Юнит-тесты
-├── dashboard/            # Веб-дашборд
-├── nativelibs/           # Нативные библиотеки
-└── build.gradle.kts      # Корневой build.gradle
-```
+## Tech Stack
 
-## Установка
+- **Frontend:** HTML/CSS/JS (vanilla)
+- **Android:** Kotlin, Jetpack Compose, Room, Hilt, OkHttp
+- **CI/CD:** GitHub Actions, GitHub Pages
 
-1. Откройте проект в Android Studio
-2. Синхронизируйте Gradle
-3. Соберите и запустите
+## Getting Started
 
-## Лицензия
-
-MIT
+1. Open `docs/index.html` in browser or visit GitHub Pages link
+2. Build Android app with `./gradlew assembleDebug`

@@ -4,11 +4,6 @@ import com.nexus.agent.core.memory.LocalEmbedder
 import javax.inject.Inject
 import javax.inject.Singleton
 
-data class RetrievalResult(
-    val chunk: DocumentChunk,
-    val score: Float,
-)
-
 @Singleton
 class VectorSearch @Inject constructor(
     private val localEmbedder: LocalEmbedder,

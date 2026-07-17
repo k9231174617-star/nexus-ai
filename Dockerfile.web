@@ -1,0 +1,11 @@
+FROM python:3.12-slim
+
+WORKDIR /app
+
+# Simple HTTP server for static files
+COPY docs/ ./docs/
+
+EXPOSE 8080
+
+# Serve static files with Python http.server
+CMD ["python", "-m", "http.server", "8080", "--directory", "docs/"]

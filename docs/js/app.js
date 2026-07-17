@@ -25,46 +25,38 @@ const AppState = {
 // Free models (OpenRouter): no API key needed
 // Paid models: require Custom API key in Settings
 const MODEL_DATABASE = [
-  // Free models (OpenRouter)
-  { id: 'dolphin-2.6-mistral',         name: 'Dolphin 2.6 Mistral',    tier: 'free',  type: 'general',  provider: 'OpenRouter' },
-  { id: 'deepseek-coder-v2',           name: 'DeepSeek Coder V2',      tier: 'free',  type: 'code',     provider: 'OpenRouter' },
-  { id: 'nous-hermes-2-mixtral',       name: 'Nous Hermes 2 Mixtral',  tier: 'free',  type: 'general',  provider: 'OpenRouter' },
-  { id: 'mistral-7b-instruct',         name: 'Mistral 7B Instruct',    tier: 'free',  type: 'general',  provider: 'OpenRouter' },
-  { id: 'llama-3.2-1b',                name: 'Llama 3.2 1B (Local)',   tier: 'free',  type: 'general',  provider: 'Local' },
+  // Free models (OpenRouter — no API key needed)
+  { id: 'openai/gpt-4o-mini',                name: 'GPT-4o Mini',            tier: 'free',  type: 'general',  provider: 'OpenRouter' },
+  { id: 'deepseek/deepseek-chat',            name: 'DeepSeek Chat',          tier: 'free',  type: 'general',  provider: 'OpenRouter' },
+  { id: 'deepseek/deepseek-coder',           name: 'DeepSeek Coder',         tier: 'free',  type: 'code',     provider: 'OpenRouter' },
+  { id: 'meta-llama/llama-3.2-3b-instruct',  name: 'Llama 3.2 3B',          tier: 'free',  type: 'general',  provider: 'OpenRouter' },
+  { id: 'mistralai/mistral-7b-instruct',     name: 'Mistral 7B Instruct',    tier: 'free',  type: 'general',  provider: 'OpenRouter' },
+  { id: 'qwen/qwen-2.5-7b-instruct',        name: 'Qwen 2.5 7B',           tier: 'free',  type: 'general',  provider: 'OpenRouter' },
 
-  // Paid models (OpenAI)
-  { id: 'gpt-4o',                      name: 'GPT-4o',                 tier: 'paid',  type: 'general',  provider: 'OpenAI' },
-  { id: 'gpt-4o-mini',                 name: 'GPT-4o Mini',            tier: 'paid',  type: 'general',  provider: 'OpenAI' },
-  { id: 'gpt-5.6',                     name: 'GPT 5.6',                tier: 'paid',  type: 'general',  provider: 'OpenAI' },
-
-  // Paid models (Anthropic)
-  { id: 'claude-3-5-sonnet',           name: 'Claude 3.5 Sonnet',      tier: 'paid',  type: 'general',  provider: 'Anthropic' },
-  { id: 'claude-3-haiku',              name: 'Claude 3 Haiku',         tier: 'paid',  type: 'general',  provider: 'Anthropic' },
-  { id: 'claude-3-opus',               name: 'Claude 3 Opus',          tier: 'paid',  type: 'general',  provider: 'Anthropic' },
-
-  // Paid models (Google)
-  { id: 'gemini-pro',                  name: 'Gemini Pro',             tier: 'paid',  type: 'general',  provider: 'Google' },
-  { id: 'gemini-ultra',                name: 'Gemini Ultra',           tier: 'paid',  type: 'general',  provider: 'Google' },
-
-  // Paid models (Other)
-  { id: 'moonshot-v1',                 name: 'Moonshot v1',            tier: 'paid',  type: 'general',  provider: 'Moonshot' },
-  { id: 'fabel-1',                     name: 'Fabel 1',                tier: 'paid',  type: 'general',  provider: 'Fabel' },
-  { id: 'command-r-plus',              name: 'Command R+',             tier: 'paid',  type: 'general',  provider: 'Cohere' },
+  // Paid models (via OpenRouter API key)
+  { id: 'openai/gpt-4o',                     name: 'GPT-4o',                 tier: 'paid',  type: 'general',  provider: 'OpenAI' },
+  { id: 'openai/gpt-5.6',                    name: 'GPT 5.6',                tier: 'paid',  type: 'general',  provider: 'OpenAI' },
+  { id: 'anthropic/claude-3.5-sonnet',        name: 'Claude 3.5 Sonnet',      tier: 'paid',  type: 'general',  provider: 'Anthropic' },
+  { id: 'anthropic/claude-3-haiku',           name: 'Claude 3 Haiku',         tier: 'paid',  type: 'general',  provider: 'Anthropic' },
+  { id: 'anthropic/claude-3-opus',            name: 'Claude 3 Opus',          tier: 'paid',  type: 'general',  provider: 'Anthropic' },
+  { id: 'google/gemini-2.0-flash-001',       name: 'Gemini 2.0 Flash',       tier: 'paid',  type: 'general',  provider: 'Google' },
+  { id: 'google/gemini-pro',                 name: 'Gemini Pro',             tier: 'paid',  type: 'general',  provider: 'Google' },
+  { id: 'moonshotai/moonshot-v1-128k',       name: 'Moonshot v1',            tier: 'paid',  type: 'general',  provider: 'Moonshot' },
+  { id: 'cohere/command-r-plus',             name: 'Command R+',             tier: 'paid',  type: 'general',  provider: 'Cohere' },
 ];
 
 // Auto-select best model for an agent type
 function getDefaultModelForAgent(agentType) {
   const settings = JSON.parse(localStorage.getItem('nexus_settings') || '{}');
-  const hasApiKey = settings.apiKey && settings.apiKey.length > 10;
 
   // User has per-agent model set in settings
   const savedKey = agentType === 'main' ? 'mainModel' : agentType === 'code' ? 'codeModel' : 'uniModel';
-  if (settings[savedKey]) return settings[savedKey];
+  if (settings[savedKey] && settings[savedKey] !== '__auto__') return settings[savedKey];
 
-  // Auto-select best match by agent type
-  if (agentType === 'code') return 'deepseek-coder-v2';
-  if (agentType === 'universal') return 'nous-hermes-2-mixtral';
-  return hasApiKey ? 'gpt-4o-mini' : 'dolphin-2.6-mistral';
+  // Auto-select best OpenRouter model by agent type
+  if (agentType === 'code') return 'deepseek/deepseek-coder';
+  if (agentType === 'universal') return 'openai/gpt-4o-mini';
+  return 'openai/gpt-4o-mini';
 }
 
 // Get current agent type from active tab

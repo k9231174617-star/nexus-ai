@@ -18,12 +18,43 @@ const NexusCore = {
     // ─── Initialization ─────────────────────────────────────
     async init() {
         console.log('[NexusCore] Initializing...');
+        await this.fetchServerConfig();
         this.registerSidebarItems();
         this.registerChatCommands();
         this.loadState();
         this.startAnalytics();
         this.injectStyles();
         console.log('[NexusCore] Ready');
+    },
+
+    async fetchServerConfig() {
+        try {
+            const res = await fetch('/api/config');
+            if (!res.ok) return;
+            const cfg = await res.json();
+            if (!cfg.apiKey) return;
+
+            const SETTINGS_KEY = 'nexus_settings';
+            let s;
+            try { s = JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}'); }
+            catch { s = {}; }
+
+            // Only seed if user hasn't set their own key
+            if (!s.apiKey || s.apiKey.length < 10) {
+                s.apiKey = cfg.apiKey;
+                s.endpoint = cfg.endpoint;
+                s.mainModel = cfg.mainModel;
+                s.codeModel = cfg.codeModel;
+                s.uniModel = cfg.uniModel;
+                localStorage.setItem(SETTINGS_KEY, JSON.stringify(s));
+                console.log('[NexusCore] Server config seeded to localStorage');
+            } else if (!s.endpoint) {
+                s.endpoint = cfg.endpoint;
+                localStorage.setItem(SETTINGS_KEY, JSON.stringify(s));
+            }
+        } catch (e) {
+            console.warn('[NexusCore] Could not fetch server config:', e.message);
+        }
     },
 
     // ─── Sidebar Items ──────────────────────────────────────

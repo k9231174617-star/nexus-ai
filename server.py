@@ -17,17 +17,48 @@ PORT = int(os.getenv("PORT", "8080"))
 DASHBOARD_DIR = os.path.join(os.path.dirname(__file__), "docs")
 
 
+import json
+from http.server import HTTPServer, SimpleHTTPRequestHandler
+from urllib.parse import urlparse
+
 class DashboardHandler(SimpleHTTPRequestHandler):
-    """Serve dashboard static files with CORS headers."""
-    
+    """Serve dashboard static files + API config endpoint."""
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=DASHBOARD_DIR, **kwargs)
-    
+
+    def do_GET(self):
+        parsed = urlparse(self.path)
+        if parsed.path == '/api/config':
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.send_header('Cache-Control', 'no-cache, no-store, must-revalidate')
+            self.end_headers()
+            config = {
+                'apiKey': os.getenv('OPENROUTER_API_KEY', ''),
+                'endpoint': 'https://openrouter.ai/api/v1/chat/completions',
+                'mainModel': os.getenv('LLM_MODEL', 'openai/gpt-4o-mini'),
+                'codeModel': 'deepseek/deepseek-coder',
+                'uniModel': os.getenv('LLM_MODEL', 'openai/gpt-4o-mini'),
+                'dashboardUrl': os.getenv('WEB_DASHBOARD_URL', ''),
+            }
+            self.wfile.write(json.dumps(config).encode())
+            return
+        super().do_GET()
+
+    def do_OPTIONS(self):
+        self.send_response(200)
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.send_header('Access-Control-Allow-Methods', 'GET, OPTIONS')
+        self.send_header('Access-Control-Allow-Headers', 'Content-Type')
+        self.end_headers()
+
     def end_headers(self):
         self.send_header("Access-Control-Allow-Origin", "*")
         self.send_header("Cache-Control", "no-cache, no-store, must-revalidate")
         super().end_headers()
-    
+
     def log_message(self, format, *args):
         logger.info(f"[DASHBOARD] {args[0]} {args[1]} {args[2]}")
 

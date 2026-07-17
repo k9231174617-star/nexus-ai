@@ -182,6 +182,31 @@ async function callAPI(messages, agentType) {
   if (useCustom) {
     return callCustomAPI(messages, agentType, settings);
   } else {
+    // Try OpenRouter free model without API key
+    try {
+      const model = getDefaultModelForAgent(agentType);
+      const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'HTTP-Referer': window.location.origin,
+          'X-Title': 'Nexus AI Dashboard',
+        },
+        body: JSON.stringify({
+          model,
+          messages: [
+            { role: 'system', content: SYSTEM_PROMPTS[agentType] },
+            ...messages.slice(-16)
+          ],
+          temperature: 0.7,
+          max_tokens: 1500,
+        })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        return data.choices?.[0]?.message?.content || 'No response';
+      }
+    } catch (e) { /* fall through to demo */ }
     return callDemoAPI(messages, agentType);
   }
 }
@@ -363,12 +388,19 @@ async function callCustomAPI(messages, agentType, settings) {
 
   const endpoint = settings.endpoint || 'https://api.openai.com/v1/chat/completions';
 
+  const isOpenRouter = endpoint.includes('openrouter.ai');
+  const headers = {
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${settings.apiKey}`,
+  };
+  if (isOpenRouter) {
+    headers['HTTP-Referer'] = window.location.origin;
+    headers['X-Title'] = 'Nexus AI Dashboard';
+  }
+
   const res = await fetch(endpoint, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${settings.apiKey}`
-    },
+    headers,
     body: JSON.stringify({
       model,
       messages: [

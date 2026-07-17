@@ -38,6 +38,23 @@ import com.nexus.agent.core.cache.CacheDao
     exportSchema = false,
 )
 abstract class AppDatabase : RoomDatabase() {
+    companion object {
+        @Volatile
+        private var INSTANCE: AppDatabase? = null
+
+        fun getInstance(context: android.content.Context): AppDatabase {
+            return INSTANCE ?: synchronized(this) {
+                val instance = androidx.room.Room.databaseBuilder(
+                    context.applicationContext,
+                    AppDatabase::class.java,
+                    "nexus_db"
+                ).fallbackToDestructiveMigration().build()
+                INSTANCE = instance
+                instance
+            }
+        }
+    }
+
     abstract fun chatDao(): ChatDao
     abstract fun settingsDao(): SettingsDao
     abstract fun memoryDao(): MemoryDao

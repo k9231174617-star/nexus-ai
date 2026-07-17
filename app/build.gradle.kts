@@ -70,4 +70,5 @@ dependencies {
 
     // DrawerLayout
     implementation(libs.androidx.drawerlayout)
+    implementation(libs.androidx.work.runtime.ktx)
 }

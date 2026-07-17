@@ -136,4 +136,7 @@
     <!-- System -->
     <string name="appbar_scrolling_view_behavior">com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior</string>
 
+
+    <string name="accessibility_service_description">Allows Nexus AI to read screen content and perform automated actions for AI assistance.</string>
+
 </resources>

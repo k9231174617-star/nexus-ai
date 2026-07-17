@@ -119,6 +119,25 @@ object AppModule {
     fun provideLearningLoop(): com.nexus.agent.core.learning.LearningLoop =
         com.nexus.agent.core.learning.LearningLoop()
 
+
+    @Provides @Singleton
+    fun provideLlamaJNI(@ApplicationContext ctx: Context): com.nexus.agent.core.llama.LlamaJNI {
+        com.nexus.agent.core.llama.LlamaJNI.loadNative()
+        return com.nexus.agent.core.llama.LlamaJNI(ctx)
+    }
+
+    @Provides @Singleton
+    fun provideWakeWordDetector(): com.nexus.agent.core.voice.WakeWordDetector =
+        com.nexus.agent.core.voice.WakeWordDetector()
+
+    @Provides @Singleton
+    fun provideDecompiler(@ApplicationContext ctx: Context): com.nexus.agent.core.apk.Decompiler =
+        com.nexus.agent.core.apk.Decompiler(ctx)
+
+    @Provides @Singleton
+    fun provideApkPatcher(@ApplicationContext ctx: Context): com.nexus.agent.core.apk.ApkPatcher =
+        com.nexus.agent.core.apk.ApkPatcher(ctx)
+
     @Provides @Singleton
     fun provideLLMBridge(
         api: com.nexus.agent.data.remote.LLMAPI,

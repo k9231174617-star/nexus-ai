@@ -5,7 +5,7 @@ Serves the dashboard UI and runs the Telegram bot concurrently.
 import os
 import sys
 import asyncio
-import threading
+import multiprocessing
 import logging
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 from pathlib import Path
@@ -78,7 +78,7 @@ if __name__ == "__main__":
                 f.write("<html><body><h1>Nexus AI</h1><p>Dashboard loading...</p></body></html>")
     
     # Start bot in background process
-    bot_process = multiprocessing.Process(target=run_bot, daemon=True)
+    bot_process = multiprocessing.Process(target=run_bot)
     bot_process.start()
     
     # Run dashboard in main thread

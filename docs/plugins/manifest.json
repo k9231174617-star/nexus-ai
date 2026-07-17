@@ -1,0 +1,7 @@
+{
+  "plugins": [
+    "plugins/code-review/plugin.json",
+    "plugins/mcp-bridge/plugin.json",
+    "plugins/analytics/plugin.json"
+  ]
+}

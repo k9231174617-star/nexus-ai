@@ -177,8 +177,12 @@ $('clearChat')?.addEventListener('click', () => {
 // ── Export Chat ────────────────────────────────────────────
 $('exportChat')?.addEventListener('click', () => {
   const msgs = $qa('.msg-text');
-  let text = `NEXUS AI — Export ${new Date().toLocaleString()}\n\n`;
-  msgs.forEach(m => { text += m.innerText + '\n\n'; });
+  let text = `NEXUS AI — Export ${new Date().toLocaleString()}
+
+`;
+  msgs.forEach(m => { text += m.innerText + '
+
+'; });
   const blob = new Blob([text], { type: 'text/plain' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -220,7 +224,9 @@ window.selectFile = function(el, name) {
   if (panel) {
     panel.style.display = 'flex';
     $('previewFileName').textContent = name;
-    $('previewContent').textContent = `File: ${name}\n\nClick "Анализировать AI" to analyze with NEXUS AI agent.`;
+    $('previewContent').textContent = `File: ${name}
+
+Click "Анализировать AI" to analyze with NEXUS AI agent.`;
   }
 };
 
@@ -364,3 +370,60 @@ function addMemoryEntry(type, text) {
 window.addMemoryEntry = addMemoryEntry;
 window.updateTokenCount = updateTokenCount;
 window.AppState = AppState;
+
+
+// ─── Plugin System Integration ───────────────────────────────
+// Hooks into NexusPlugins to add sidebar items dynamically
+
+function initPluginSystem() {
+    const pm = window.NexusPlugins;
+    if (!pm) return;
+
+    // Add plugin sidebar items after initial render
+    pm.on('app:render', () => {
+        renderPluginSidebarItems();
+    });
+}
+
+function renderPluginSidebarItems() {
+    const pm = window.NexusPlugins;
+    if (!pm) return;
+
+    const items = pm.getSidebarItems();
+    if (items.length === 0) return;
+
+    // Find the tools section in sidebar
+    const nav = document.querySelector('.sidebar-nav');
+    if (!nav) return;
+
+    const toolsSection = nav.querySelector('[data-section="tools"]') || 
+        nav.querySelector('*:nth-child(3)'); // Approximate position
+
+    items.forEach(item => {
+        const el = document.createElement('a');
+        el.className = 'nav-item plugin-item';
+        el.dataset.plugin = item.id;
+        el.innerHTML = `<span class="nav-icon">${item.icon || '🧩'}</span>${item.label}`;
+        el.onclick = (e) => {
+            e.preventDefault();
+            if (item.onClick) item.onClick();
+            // Close sidebar on mobile
+            const sidebar = document.getElementById('sidebar');
+            if (sidebar && window.innerWidth <= 768) {
+                sidebar.classList.remove('open');
+            }
+        };
+        if (toolsSection) {
+            toolsSection.parentNode.insertBefore(el, toolsSection.nextSibling);
+        } else {
+            nav.appendChild(el);
+        }
+    });
+}
+
+// Initialize when DOM is ready
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initPluginSystem);
+} else {
+    initPluginSystem();
+}

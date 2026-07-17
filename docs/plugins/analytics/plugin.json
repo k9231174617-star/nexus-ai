@@ -1,0 +1,9 @@
+{
+  "id": "nexus-analytics",
+  "name": "Analytics",
+  "version": "1.0.0",
+  "description": "Usage analytics and insights for Nexus AI",
+  "author": "Nexus AI",
+  "main": "plugin.js",
+  "hooks": ["sidebar:items", "topbar:actions"]
+}

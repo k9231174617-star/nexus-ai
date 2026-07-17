@@ -105,6 +105,20 @@ object AppModule {
     @Provides @Singleton
     fun provideModelRouter(): ModelRouter = ModelRouter()
 
+
+    @Provides @Singleton
+    fun provideMCPClient(client: OkHttpClient): com.nexus.agent.core.mcp.MCPClient =
+        com.nexus.agent.core.mcp.MCPClient(client)
+
+
+    @Provides @Singleton
+    fun provideAgentCoordinator(): com.nexus.agent.core.agents.AgentCoordinator =
+        com.nexus.agent.core.agents.AgentCoordinator()
+
+    @Provides @Singleton
+    fun provideLearningLoop(): com.nexus.agent.core.learning.LearningLoop =
+        com.nexus.agent.core.learning.LearningLoop()
+
     @Provides @Singleton
     fun provideLLMBridge(
         api: com.nexus.agent.data.remote.LLMAPI,

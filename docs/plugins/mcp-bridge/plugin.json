@@ -1,0 +1,9 @@
+{
+  "id": "nexus-mcp-bridge",
+  "name": "MCP Bridge",
+  "version": "1.0.0",
+  "description": "Connect to MCP servers for tools, resources, and prompts",
+  "author": "Nexus AI",
+  "main": "plugin.js",
+  "hooks": ["sidebar:items", "chat:commands", "settings:panels"]
+}

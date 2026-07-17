@@ -1,0 +1,10 @@
+{
+  "id": "nexus-code-review",
+  "name": "Code Review",
+  "version": "1.0.0",
+  "description": "Automated code review with AI-powered analysis",
+  "author": "Nexus AI",
+  "main": "plugin.js",
+  "hooks": ["sidebar:items", "chat:commands"],
+  "permissions": ["files:read", "ai:generate"]
+}

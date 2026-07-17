@@ -518,13 +518,14 @@ async def post_init(application: Application):
         logger.warning("OpenRouter not configured — using fallback responses")
 
 
+# ── Main Entry Point ───────────────────────────────────────
+
 def run():
     """Entry point for multiprocessing spawn - runs the bot."""
-    # Use asyncio.run() to create a fresh event loop and run main()
-    asyncio.run(main())
-
-
-async def main():
+    # run_polling manages its own event loop internally
+    # Just call main() directly - the Application will handle the event loop
+    import sys
+    
     if not BOT_TOKEN:
         logger.error("TELEGRAM_BOT_TOKEN not set!")
         return
@@ -545,7 +546,7 @@ async def main():
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
     logger.info("Starting Nexus AI Telegram Bot...")
-    # run_polling is a blocking call that manages its own event loop internally
+    # run_polling is a blocking call that manages its own event loop
     app.run_polling(drop_pending_updates=True)
 
 

@@ -365,6 +365,8 @@ async def cmd_dashboard(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # ── Callback Handler ────────────────────────────────────────
 
 async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    global LLM_MODEL  # Must be at the top of function before any LLM_MODEL references
+    
     query = update.callback_query
     await query.answer()
     
@@ -413,7 +415,6 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
     elif data.startswith("model_"):
         model_id = data[6:]
-        global LLM_MODEL
         if model_id in LLM_MODELS:
             LLM_MODEL = model_id
             user_sessions[user_id]['model'] = model_id

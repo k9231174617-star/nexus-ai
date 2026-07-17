@@ -27,11 +27,11 @@ document.addEventListener('DOMContentLoaded', () => {
 function initSettings() {
   const s = loadSettings();
 
-  // Populate selects
+  // Populate model select dropdowns from MODEL_DATABASE
+  populateModelSelects();
+
+  // Populate other selects
   const fields = {
-    mainModelSelect: 'mainModel',
-    codeModelSelect: 'codeModel',
-    uniModelSelect:  'uniModel',
     customEndpoint:  'endpoint',
     apiKeyInput:     'apiKey',
   };
@@ -39,6 +39,14 @@ function initSettings() {
   Object.entries(fields).forEach(([id, key]) => {
     const el = document.getElementById(id);
     if (el && s[key]) el.value = s[key];
+  });
+
+  // Restore saved model selections
+  ['mainModelSelect', 'codeModelSelect', 'uniModelSelect'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const key = id === 'mainModelSelect' ? 'mainModel' : id === 'codeModelSelect' ? 'codeModel' : 'uniModel';
+    if (s[key]) el.value = s[key];
   });
 
   // Toggles
@@ -56,6 +64,48 @@ function initSettings() {
 
   // Update model labels in sidebar
   updateModelLabels(s);
+}
+
+function populateModelSelects() {
+  ['mainModelSelect', 'codeModelSelect', 'uniModelSelect'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+
+    // Clear existing options
+    el.innerHTML = '';
+
+    // Add auto option
+    const autoOpt = document.createElement('option');
+    autoOpt.value = '__auto__';
+    autoOpt.textContent = '⟲ Auto (по умолчанию для агента)';
+    el.appendChild(autoOpt);
+
+    // Group by tier
+    const freeModels = MODEL_DATABASE.filter(m => m.tier === 'free');
+    const paidModels = MODEL_DATABASE.filter(m => m.tier === 'paid');
+
+    // Free models group
+    const freeGroup = document.createElement('optgroup');
+    freeGroup.label = 'Бесплатные (OpenRouter)';
+    freeModels.forEach(m => {
+      const opt = document.createElement('option');
+      opt.value = m.id;
+      opt.textContent = `${m.name} — ${m.provider}`;
+      freeGroup.appendChild(opt);
+    });
+    el.appendChild(freeGroup);
+
+    // Paid models group
+    const paidGroup = document.createElement('optgroup');
+    paidGroup.label = 'Платные (API Key)';
+    paidModels.forEach(m => {
+      const opt = document.createElement('option');
+      opt.value = m.id;
+      opt.textContent = `${m.name} — ${m.provider}`;
+      paidGroup.appendChild(opt);
+    });
+    el.appendChild(paidGroup);
+  });
 }
 
 function updateModelLabels(s) {
@@ -85,6 +135,11 @@ document.getElementById('saveApiSettings')?.addEventListener('click', () => {
     rootMode:  document.getElementById('rootModeToggle')?.checked,
     saveHistory: document.getElementById('saveHistoryToggle')?.checked,
   };
+
+  // If model is set to auto, clear the saved preference
+  if (updates.mainModel === '__auto__') delete updates.mainModel;
+  if (updates.codeModel === '__auto__') delete updates.codeModel;
+  if (updates.uniModel === '__auto__') delete updates.uniModel;
 
   Object.assign(s, updates);
   saveSettings(s);

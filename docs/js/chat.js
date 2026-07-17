@@ -186,15 +186,182 @@ async function callAPI(messages, agentType) {
   }
 }
 
+// ── Model Selector ─────────────────────────────────────────
+let modelSelectorInitialized = false;
+
+function initModelSelector() {
+  if (modelSelectorInitialized) return;
+  modelSelectorInitialized = true;
+
+  const btn = document.getElementById('modelSelectorBtn');
+  const dd = document.getElementById('modelDropdown');
+  const list = document.getElementById('modelDropdownList');
+  const autoBtn = document.getElementById('modelAutoBtn');
+  const searchInput = document.getElementById('modelSearchInput');
+
+  if (!btn || !dd || !list) return;
+
+  // Toggle dropdown
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    dd.classList.toggle('open');
+    if (dd.classList.contains('open')) {
+      renderModelList(list, searchInput?.value || '');
+      searchInput?.focus();
+    }
+  });
+
+  // Close on outside click
+  document.addEventListener('click', (e) => {
+    const wrap = document.getElementById('modelSelectorWrap');
+    if (wrap && !wrap.contains(e.target)) {
+      dd?.classList.remove('open');
+    }
+  });
+
+  // Auto button
+  autoBtn?.addEventListener('click', () => {
+    AppState.chatOverrideModel = null;
+    updateModelSelectorLabel();
+    dd.classList.remove('open');
+  });
+
+  // Search
+  searchInput?.addEventListener('input', () => {
+    renderModelList(list, searchInput.value);
+  });
+
+  // Listen for tab switches to update auto-label
+  document.addEventListener('tabChanged', () => {
+    if (!AppState.chatOverrideModel) updateModelSelectorLabel();
+  });
+
+  // Initial render
+  updateModelSelectorLabel();
+}
+
+function renderModelList(container, searchQuery) {
+  const settings = JSON.parse(localStorage.getItem('nexus_settings') || '{}');
+  const hasApiKey = settings.apiKey && settings.apiKey.length > 10;
+
+  let models = [...MODEL_DATABASE];
+
+  // Filter by search
+  if (searchQuery) {
+    const q = searchQuery.toLowerCase();
+    models = models.filter(m => 
+      m.name.toLowerCase().includes(q) || 
+      m.id.toLowerCase().includes(q) || 
+      m.provider.toLowerCase().includes(q)
+    );
+  }
+
+  // Group by tier
+  const freeModels = models.filter(m => m.tier === 'free');
+  const paidModels = models.filter(m => m.tier === 'paid');
+
+  let html = '';
+
+  // Current selection indicator
+  const currentModel = AppState.chatOverrideModel;
+  const currentInfo = currentModel ? getModelInfo(currentModel) : null;
+
+  if (currentInfo) {
+    html += `<div class="model-dropdown-current">
+      <span class="model-dd-dot" style="background:${currentInfo.tier === 'free' ? '#44dd88' : '#FF0A2F'}"></span>
+      <span><strong>${currentInfo.name}</strong></span>
+      <span style="color:var(--text-muted);font-size:11px;margin-left:auto">${currentInfo.provider}</span>
+    </div>`;
+  }
+
+  // Free models section
+  if (freeModels.length > 0) {
+    html += `<div class="model-dd-section-label">Бесплатные модели</div>`;
+    freeModels.forEach(m => {
+      const active = currentModel === m.id ? ' active' : '';
+      html += `<div class="model-dd-item${active}" data-model="${m.id}">
+        <span class="model-dd-dot free-dot"></span>
+        <span class="model-dd-name">${m.name}</span>
+        <span class="model-dd-provider">${m.provider}</span>
+      </div>`;
+    });
+  }
+
+  // Paid models section
+  if (paidModels.length > 0) {
+    html += `<div class="model-dd-section-label${!hasApiKey ? ' dimmed' : ''}">${hasApiKey ? 'Платные модели' : 'Платные модели (нужен API Key)'}</div>`;
+    paidModels.forEach(m => {
+      const active = currentModel === m.id ? ' active' : '';
+      const disabled = !hasApiKey ? ' disabled' : '';
+      html += `<div class="model-dd-item${active}${disabled}" data-model="${m.id}">
+        <span class="model-dd-dot paid-dot"></span>
+        <span class="model-dd-name">${m.name}</span>
+        <span class="model-dd-provider">${m.provider}</span>
+      </div>`;
+    });
+  }
+
+  if (!html) {
+    html = '<div class="model-dd-empty">Модели не найдены</div>';
+  }
+
+  container.innerHTML = html;
+
+  // Click handlers
+  container.querySelectorAll('.model-dd-item:not(.disabled)').forEach(el => {
+    el.addEventListener('click', () => {
+      const modelId = el.dataset.model;
+      AppState.chatOverrideModel = modelId;
+      updateModelSelectorLabel();
+      document.getElementById('modelDropdown')?.classList.remove('open');
+    });
+  });
+}
+
+function updateModelSelectorLabel() {
+  const label = document.getElementById('modelSelectorLabel');
+  const dot = document.getElementById('modelSelectorDot');
+  const badge = document.getElementById('activeModelBadge');
+
+  if (!label) return;
+
+  const agentType = getCurrentAgentType();
+  const modelId = AppState.chatOverrideModel || getDefaultModelForAgent(agentType);
+  const info = getModelInfo(modelId);
+
+  if (AppState.chatOverrideModel) {
+    label.textContent = info.name.split(' ').slice(0, 2).join(' ');
+    label.style.color = 'var(--red-core)';
+    dot.style.background = info.tier === 'free' ? '#44dd88' : '#FF0A2F';
+  } else {
+    label.textContent = 'Auto';
+    label.style.color = 'var(--text-muted)';
+    dot.style.background = 'var(--text-muted)';
+  }
+
+  if (badge) badge.textContent = info.name.split(' ').slice(0, 2).join(' ').toUpperCase();
+}
+
+// Initialize after DOM
+document.addEventListener('DOMContentLoaded', () => {
+  initModelSelector();
+});
+
 async function callCustomAPI(messages, agentType, settings) {
-  const modelMap = {
-    main: settings.mainModel || 'gpt-4o-mini',
-    code: settings.codeModel || 'gpt-4o-mini',
-    universal: settings.uniModel || 'gpt-4o-mini'
-  };
+  // Use chat override model if set, otherwise per-agent settings, otherwise auto-detect
+  let model;
+  if (AppState.chatOverrideModel) {
+    model = AppState.chatOverrideModel;
+  } else {
+    const modelMap = {
+      main: settings.mainModel || getDefaultModelForAgent('main'),
+      code: settings.codeModel || getDefaultModelForAgent('code'),
+      universal: settings.uniModel || getDefaultModelForAgent('universal'),
+    };
+    model = modelMap[agentType] || getDefaultModelForAgent(agentType);
+  }
 
   const endpoint = settings.endpoint || 'https://api.openai.com/v1/chat/completions';
-  const model = modelMap[agentType];
 
   const res = await fetch(endpoint, {
     method: 'POST',

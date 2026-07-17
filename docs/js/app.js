@@ -16,8 +16,78 @@ const AppState = {
     main: 'dolphin-2.6-mistral',
     code: 'deepseek-coder-v2',
     universal: 'nous-hermes-2-mixtral'
-  }
+  },
+  // Override model selected manually in chat bar (null = auto)
+  chatOverrideModel: null,
 };
+
+// ── Model Database ─────────────────────────────────────────
+// Free models (OpenRouter): no API key needed
+// Paid models: require Custom API key in Settings
+const MODEL_DATABASE = [
+  // Free models (OpenRouter)
+  { id: 'dolphin-2.6-mistral',         name: 'Dolphin 2.6 Mistral',    tier: 'free',  type: 'general',  provider: 'OpenRouter' },
+  { id: 'deepseek-coder-v2',           name: 'DeepSeek Coder V2',      tier: 'free',  type: 'code',     provider: 'OpenRouter' },
+  { id: 'nous-hermes-2-mixtral',       name: 'Nous Hermes 2 Mixtral',  tier: 'free',  type: 'general',  provider: 'OpenRouter' },
+  { id: 'mistral-7b-instruct',         name: 'Mistral 7B Instruct',    tier: 'free',  type: 'general',  provider: 'OpenRouter' },
+  { id: 'llama-3.2-1b',                name: 'Llama 3.2 1B (Local)',   tier: 'free',  type: 'general',  provider: 'Local' },
+
+  // Paid models (OpenAI)
+  { id: 'gpt-4o',                      name: 'GPT-4o',                 tier: 'paid',  type: 'general',  provider: 'OpenAI' },
+  { id: 'gpt-4o-mini',                 name: 'GPT-4o Mini',            tier: 'paid',  type: 'general',  provider: 'OpenAI' },
+  { id: 'gpt-5.6',                     name: 'GPT 5.6',                tier: 'paid',  type: 'general',  provider: 'OpenAI' },
+
+  // Paid models (Anthropic)
+  { id: 'claude-3-5-sonnet',           name: 'Claude 3.5 Sonnet',      tier: 'paid',  type: 'general',  provider: 'Anthropic' },
+  { id: 'claude-3-haiku',              name: 'Claude 3 Haiku',         tier: 'paid',  type: 'general',  provider: 'Anthropic' },
+  { id: 'claude-3-opus',               name: 'Claude 3 Opus',          tier: 'paid',  type: 'general',  provider: 'Anthropic' },
+
+  // Paid models (Google)
+  { id: 'gemini-pro',                  name: 'Gemini Pro',             tier: 'paid',  type: 'general',  provider: 'Google' },
+  { id: 'gemini-ultra',                name: 'Gemini Ultra',           tier: 'paid',  type: 'general',  provider: 'Google' },
+
+  // Paid models (Other)
+  { id: 'moonshot-v1',                 name: 'Moonshot v1',            tier: 'paid',  type: 'general',  provider: 'Moonshot' },
+  { id: 'fabel-1',                     name: 'Fabel 1',                tier: 'paid',  type: 'general',  provider: 'Fabel' },
+  { id: 'command-r-plus',              name: 'Command R+',             tier: 'paid',  type: 'general',  provider: 'Cohere' },
+];
+
+// Auto-select best model for an agent type
+function getDefaultModelForAgent(agentType) {
+  const settings = JSON.parse(localStorage.getItem('nexus_settings') || '{}');
+  const hasApiKey = settings.apiKey && settings.apiKey.length > 10;
+
+  // User has per-agent model set in settings
+  const savedKey = agentType === 'main' ? 'mainModel' : agentType === 'code' ? 'codeModel' : 'uniModel';
+  if (settings[savedKey]) return settings[savedKey];
+
+  // Auto-select best match by agent type
+  if (agentType === 'code') return 'deepseek-coder-v2';
+  if (agentType === 'universal') return 'nous-hermes-2-mixtral';
+  return hasApiKey ? 'gpt-4o-mini' : 'dolphin-2.6-mistral';
+}
+
+// Get current agent type from active tab
+function getCurrentAgentType() {
+  return AppState.activeTab === 'code' ? 'code' : 
+         AppState.activeTab === 'universal' ? 'universal' : 'main';
+}
+
+// Get model display info
+function getModelInfo(modelId) {
+  return MODEL_DATABASE.find(m => m.id === modelId) || 
+         { id: modelId, name: modelId, tier: 'paid', type: 'general', provider: 'Custom' };
+}
+
+// Get models by tier
+function getModelsByTier(tier) {
+  return MODEL_DATABASE.filter(m => m.tier === tier);
+}
+
+// Get all model IDs for select options
+function getAllModelOptions() {
+  return MODEL_DATABASE.map(m => ({ value: m.id, label: `${m.name} (${m.provider}, ${m.tier === 'free' ? 'Free' : 'API Key'})` }));
+}
 
 // ── Tab meta ───────────────────────────────────────────────
 const TAB_META = {

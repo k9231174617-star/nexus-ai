@@ -511,7 +511,7 @@ async def post_init(application: Application):
         logger.warning("OpenRouter not configured — using fallback responses")
 
 
-def main():
+async def main():
     if not BOT_TOKEN:
         logger.error("TELEGRAM_BOT_TOKEN not set!")
         return
@@ -536,4 +536,5 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    import asyncio
+    asyncio.run(main())

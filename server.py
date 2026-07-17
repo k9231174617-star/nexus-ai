@@ -6,7 +6,8 @@ import os
 import sys
 import json
 import logging
-import multiprocessing
+import threading
+import asyncio
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 from urllib.parse import urlparse
 from pathlib import Path
@@ -142,8 +143,8 @@ def run_dashboard():
     server.serve_forever()
 
 
-def run_bot():
-    """Start the Telegram bot in a separate process."""
+async def run_bot_async():
+    """Start the Telegram bot in the main asyncio event loop."""
     bot_path = os.path.join(os.path.dirname(__file__), "bot", "bot.py")
     if not os.path.exists(bot_path):
         logger.warning(f"Bot file not found: {bot_path}")
@@ -159,20 +160,23 @@ def run_bot():
         bot_module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(bot_module)
         
-        # Call the bot's main function
+        # Call the bot's main function (async)
         if hasattr(bot_module, 'main'):
-            # Run the async main in a new event loop
-            import asyncio
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-            loop.run_until_complete(bot_module.main())
+            import inspect
+            if inspect.iscoroutinefunction(bot_module.main):
+                await bot_module.main()
+            else:
+                # If it's sync, run in executor
+                loop = asyncio.get_event_loop()
+                await loop.run_in_executor(None, bot_module.main)
         else:
             logger.error("Bot module has no main() function")
     except Exception as e:
-        logger.error(f"Bot process error: {e}", exc_info=True)
+        logger.error(f"Bot error: {e}", exc_info=True)
 
 
-if __name__ == "__main__":
+async def main():
+    """Run both dashboard and bot concurrently."""
     logger.info("Starting Nexus AI Server...")
     
     # Check if docs directory exists
@@ -180,17 +184,17 @@ if __name__ == "__main__":
         logger.warning(f"Dashboard directory not found: {DASHBOARD_DIR}")
         os.makedirs(DASHBOARD_DIR, exist_ok=True)
     
-    # Start bot in separate process (required for signal handlers)
-    bot_process = multiprocessing.Process(target=run_bot, name="TelegramBot", daemon=True)
-    bot_process.start()
-    logger.info("Telegram bot process started")
+    # Start dashboard in background thread
+    dashboard_thread = threading.Thread(target=run_dashboard, name="DashboardThread", daemon=True)
+    dashboard_thread.start()
+    logger.info("Dashboard thread started")
     
-    # Run dashboard in main process
+    # Run bot in main asyncio loop
+    await run_bot_async()
+
+
+if __name__ == "__main__":
     try:
-        run_dashboard()
+        asyncio.run(main())
     except KeyboardInterrupt:
         logger.info("Shutting down...")
-    finally:
-        if bot_process.is_alive():
-            bot_process.terminate()
-            bot_process.join(timeout=5)

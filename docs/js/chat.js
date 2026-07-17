@@ -177,38 +177,46 @@ async function sendUniChat() {
 // ── API Call ───────────────────────────────────────────────
 async function callAPI(messages, agentType) {
   const settings = loadSettings();
-  const useCustom = settings.apiKey && settings.apiKey.length > 10;
+  const apiKey = settings.apiKey || '';
+  const endpoint = settings.endpoint || 'https://openrouter.ai/api/v1/chat/completions';
+  const useCustom = apiKey.length > 10;
 
   if (useCustom) {
-    return callCustomAPI(messages, agentType, settings);
-  } else {
-    // Try OpenRouter free model without API key
     try {
-      const model = getDefaultModelForAgent(agentType);
-      const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'HTTP-Referer': window.location.origin,
-          'X-Title': 'Nexus AI Dashboard',
-        },
-        body: JSON.stringify({
-          model,
-          messages: [
-            { role: 'system', content: SYSTEM_PROMPTS[agentType] },
-            ...messages.slice(-16)
-          ],
-          temperature: 0.7,
-          max_tokens: 1500,
-        })
-      });
-      if (res.ok) {
-        const data = await res.json();
-        return data.choices?.[0]?.message?.content || 'No response';
-      }
-    } catch (e) { /* fall through to demo */ }
-    return callDemoAPI(messages, agentType);
+      return await callCustomAPI(messages, agentType, settings);
+    } catch (e) {
+      console.error('[NexusChat] API error, trying fallback:', e.message);
+    }
   }
+  // Always try OpenRouter as fallback
+  try {
+    const model = settings.mainModel || getDefaultModelForAgent(agentType);
+    const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': apiKey.length > 10 ? 'Bearer ' + apiKey : undefined,
+        'HTTP-Referer': window.location.origin,
+        'X-Title': 'Nexus AI Dashboard',
+      },
+      body: JSON.stringify({
+        model,
+        messages: [
+          { role: 'system', content: SYSTEM_PROMPTS[agentType] },
+          ...messages.slice(-16)
+        ],
+        temperature: 0.7,
+        max_tokens: 1500,
+      })
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (data.choices?.[0]?.message?.content) {
+        return data.choices[0].message.content;
+      }
+    }
+  } catch (e) { console.warn('[NexusChat] OpenRouter fallback failed:', e.message); }
+  return callDemoAPI(messages, agentType);
 }
 
 // ── Model Selector ─────────────────────────────────────────
@@ -386,7 +394,7 @@ async function callCustomAPI(messages, agentType, settings) {
     model = modelMap[agentType] || getDefaultModelForAgent(agentType);
   }
 
-  const endpoint = settings.endpoint || 'https://api.openai.com/v1/chat/completions';
+  const endpoint = settings.endpoint || 'https://openrouter.ai/api/v1/chat/completions';
 
   const isOpenRouter = endpoint.includes('openrouter.ai');
   const headers = {

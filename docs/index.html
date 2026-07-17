@@ -3,6 +3,32 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <script>
+    // Sync-load server config before anything else
+    (function() {
+      var xhr = new XMLHttpRequest();
+      xhr.open('GET', '/api/config', false); // synchronous
+      try {
+        xhr.send();
+        if (xhr.status === 200) {
+          var cfg = JSON.parse(xhr.responseText);
+          var s;
+          try { s = JSON.parse(localStorage.getItem('nexus_settings') || '{}'); } catch(e) { s = {}; }
+          if (!s.apiKey || s.apiKey.length < 10) {
+            s.apiKey = cfg.apiKey;
+            s.endpoint = cfg.endpoint;
+            s.mainModel = cfg.mainModel;
+            s.codeModel = cfg.codeModel;
+            s.uniModel = cfg.uniModel;
+            localStorage.setItem('nexus_settings', JSON.stringify(s));
+          } else if (!s.endpoint) {
+            s.endpoint = cfg.endpoint;
+            localStorage.setItem('nexus_settings', JSON.stringify(s));
+          }
+        }
+      } catch(e) {}
+    })();
+  </script>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <title>NEXUS AI — Agent Dashboard</title>
   <link rel="stylesheet" href="styles/main.css"/>

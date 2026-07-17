@@ -521,7 +521,7 @@ async def post_init(application: Application):
 def run():
     """Entry point for multiprocessing spawn - runs the bot."""
     # run_polling is a blocking call that manages its own event loop internally
-    # Use asyncio.run() to start the async main function
+    # We just need to call asyncio.run(main()) which creates a fresh event loop
     import asyncio
     asyncio.run(main())
 

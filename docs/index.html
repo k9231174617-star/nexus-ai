@@ -340,7 +340,7 @@
                 </div>
               </div>
             </div>
-            <button class="send-btn" id="sendBtn" aria-label="Send">
+            <button class="send-btn" id="sendBtn" aria-label="Send">>Y</div><div class=\"msg-content\"><div class=\"msg-header\"><span class=\"msg-name\" style=\"color:#8888AA\">YOU</span><span class=\"msg-time\">'+new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})+'</span></div><div class=\"msg-text\">'+t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</div></div>';m.appendChild(d);m.scrollTop=m.scrollHeight;}setTimeout(function(){if(typeof sendMainChat==='function')sendMainChat();else if(m){var d2=document.createElement('div');d2.className='message assistant-msg';d2.innerHTML='<div class=\"msg-avatar\"><svg width=\"28\" height=\"28\" viewBox=\"0 0 28 28\" fill=\"none\"><circle cx=\"14\" cy=\"14\" r=\"13\" fill=\"#1A0A0F\" stroke=\"#FF0A2F\" stroke-width=\"1\"/><circle cx=\"14\" cy=\"14\" r=\"5\" fill=\"#FF0A2F\" opacity=\"0.8\"/><path d=\"M14 6 L16 10 L14 9 L12 10 Z\" fill=\"#FF0A2F\"/></svg></div><div class=\"msg-content\"><div class=\"msg-header\"><span class=\"msg-name\">NEXUS</span><span class=\"msg-time\">'+new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})+'</span></div><div class=\"msg-text\">NEXUS activated. API key required for full functionality. Add in Settings.</div></div>';m.appendChild(d2);m.scrollTop=m.scrollHeight;}},500);return false;">
               <svg width="20" height="20" viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" fill="currentColor"/></svg>
             </button>
           </div>
@@ -761,6 +761,12 @@
       </section>
 
     </main>
+  
+  <!-- JS Status Indicator -->
+  <div id="jsStatus" style="position:fixed;top:4px;right:4px;z-index:9999;font-size:10px;padding:3px 8px;border-radius:4px;background:#0A0A12;border:1px solid rgba(255,10,47,0.3);color:#666;font-family:monospace;opacity:0.7">
+    JS loading...
+  </div>
+
   </div>
 
   <!-- Toast Notification -->
@@ -777,7 +783,6 @@
   <script src="js/files.js"></script>
   <script src="js/settings.js"></script>
   <script src="js/nexus-core.js"></script>
-
   <script src="js/memory.js"></script>
   <script src="js/planner.js"></script>
   <script src="js/sandbox.js"></script>
@@ -796,5 +801,193 @@
       }
     });
   </script>
+
+  <s    // Initialize plugin system after all scripts load
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.NexusPlugins) {
+        window.NexusPlugins.loadAll();
+      }
+    });
+  </script>
+
+  <script>
+    // Show JS loaded status and attach direct handlers
+    (function() {
+      var statusEl = document.getElementById('jsStatus');
+      if (statusEl) {
+        statusEl.textContent = 'JS ✓ ' + new Date().toLocaleTimeString();
+        statusEl.style.color = '#44dd88';
+        statusEl.style.borderColor = 'rgba(68,221,136,0.3)';
+        statusEl.style.opacity = '1';
+      }
+      
+      var statusMsg = 'JS loaded';
+      
+      // ── Sidebar: direct handlers with touch support ──
+      function setupSidebar() {
+        var toggle = document.getElementById('menuToggle') || document.querySelector('.topbar-menu');
+        var sidebar = document.getElementById('sidebar');
+        var overlay = document.getElementById('overlay');
+        
+        if (!toggle || !sidebar) {
+          statusMsg += ' | no-sidebar-elements';
+          setTimeout(setupSidebar, 300);
+          return;
+        }
+        
+        // IMPORTANT: Start with sidebar closed on ALL devices
+        sidebar.classList.add('closed');
+        sidebar.style.display = 'none';
+        if (overlay) overlay.classList.remove('show');
+        
+        function doOpen() {
+          sidebar.classList.remove('closed');
+          sidebar.style.display = 'flex';
+          if (overlay) overlay.classList.add('show');
+          if (statusEl) statusEl.textContent = 'sidebar open';
+        }
+        
+        function doClose() {
+          sidebar.classList.add('closed');
+          sidebar.style.display = 'none';
+          if (overlay) overlay.classList.remove('show');
+          if (statusEl) statusEl.textContent = 'sidebar closed';
+        }
+        
+        function doToggle() {
+          var isClosed = sidebar.classList.contains('closed') || sidebar.style.display === 'none';
+          if (isClosed) doOpen(); else doClose();
+        }
+        
+        // Use global functions if available, otherwise local
+        var openFn = (typeof openSidebar === 'function') ? openSidebar : doOpen;
+        var closeFn = (typeof closeSidebar === 'function') ? closeSidebar : doClose;
+        var toggleFn = (typeof toggleSidebar === 'function') ? toggleSidebar : doToggle;
+        
+        // Toggle button - replace to remove old listeners
+        toggle.parentNode.replaceChild(toggle.cloneNode(true), toggle);
+        toggle = document.getElementById('menuToggle') || document.querySelector('.topbar-menu');
+        
+        toggle.addEventListener('click', function(e) { e.preventDefault(); toggleFn(); });
+        toggle.addEventListener('touchend', function(e) { e.preventDefault(); toggleFn(); });
+        
+        // Close button
+        var closeBtn = document.getElementById('sidebarClose');
+        if (closeBtn) {
+          closeBtn.addEventListener('click', function(e) { e.preventDefault(); closeFn(); });
+          closeBtn.addEventListener('touchend', function(e) { e.preventDefault(); closeFn(); });
+        }
+        
+        // Overlay
+        if (overlay) {
+          overlay.addEventListener('click', function() { closeFn(); });
+          overlay.addEventListener('touchend', function() { closeFn(); });
+        }
+        
+        statusMsg += ' | sidebar✓';
+        if (statusEl) statusEl.textContent = statusMsg;
+      }
+      
+      // ── Chat: robust send handler ──
+      function setupChat() {
+        var sendBtn = document.getElementById('sendBtn');
+        var chatInput = document.getElementById('chatInput');
+        var chatContainer = document.getElementById('chatMessages');
+        
+        if (!sendBtn || !chatInput) {
+          statusMsg += ' | no-chat-elements';
+          setTimeout(setupChat, 300);
+          return;
+        }
+        
+        function doSend() {
+          var text = chatInput.value.trim();
+          if (!text) return;
+          
+          // Find messages container (may be set later by initMainChat)
+          var msgs = document.getElementById('chatMessages');
+          
+          // Add user message inline
+          if (msgs) {
+            var now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            var div = document.createElement('div');
+            div.className = 'message user-msg';
+            div.innerHTML = '<div class="user-avatar-dot">Y</div><div class="msg-content"><div class="msg-header"><span class="msg-name" style="color:#8888AA">YOU</span><span class="msg-time">' + now + '</span></div><div class="msg-text">' + text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</div></div>';
+            msgs.appendChild(div);
+            msgs.scrollTop = msgs.scrollHeight;
+          }
+          
+          chatInput.value = '';
+          chatInput.style.height = 'auto';
+          
+          // Try using the main chat function if available
+          if (typeof sendMainChat === 'function') {
+            sendMainChat();
+          } else if (typeof getDemoResponse === 'function') {
+            // Fallback: use demo response
+            setTimeout(function() {
+              if (!msgs) msgs = document.getElementById('chatMessages');
+              if (!msgs) return;
+              var now2 = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+              var resp = getDemoResponse(text);
+              var div2 = document.createElement('div');
+              div2.className = 'message assistant-msg';
+              div2.innerHTML = '<div class="msg-avatar"><svg width="28" height="28" viewBox="0 0 28 28" fill="none"><circle cx="14" cy="14" r="13" fill="#1A0A0F" stroke="#FF0A2F" stroke-width="1"/><circle cx="14" cy="14" r="5" fill="#FF0A2F" opacity="0.8"/><path d="M14 6 L16 10 L14 9 L12 10 Z" fill="#FF0A2F"/></svg></div><div class="msg-content"><div class="msg-header"><span class="msg-name">NEXUS</span><span class="msg-time">' + now2 + '</span></div><div class="msg-text">' + resp.replace(/\n/g, '<br>') + '</div></div>';
+              msgs.appendChild(div2);
+              msgs.scrollTop = msgs.scrollHeight;
+            }, 500);
+          } else {
+            // Last resort: just show demo inline
+            setTimeout(function() {
+              if (!msgs) msgs = document.getElementById('chatMessages');
+              if (!msgs) return;
+              var now2 = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+              var demos = ['I\'m NEXUS AI. Add your API key in Settings.', 'NEXUS ready. Demo mode.', 'Connect API key for full AI capabilities.'];
+              var resp = demos[Math.floor(Math.random() * demos.length)];
+              var div2 = document.createElement('div');
+              div2.className = 'message assistant-msg';
+              div2.innerHTML = '<div class="msg-avatar"><svg width="28" height="28" viewBox="0 0 28 28" fill="none"><circle cx="14" cy="14" r="13" fill="#1A0A0F" stroke="#FF0A2F" stroke-width="1"/><circle cx="14" cy="14" r="5" fill="#FF0A2F" opacity="0.8"/><path d="M14 6 L16 10 L14 9 L12 10 Z" fill="#FF0A2F"/></svg></div><div class="msg-content"><div class="msg-header"><span class="msg-name">NEXUS</span><span class="msg-time">' + now2 + '</span></div><div class="msg-text">' + resp + '</div></div>';
+              msgs.appendChild(div2);
+              msgs.scrollTop = msgs.scrollHeight;
+            }, 500);
+          }
+        }
+        
+        // Remove old listeners and set fresh ones
+        var newBtn = sendBtn.cloneNode(true);
+        sendBtn.parentNode.replaceChild(newBtn, sendBtn);
+        sendBtn = newBtn;
+        
+        sendBtn.addEventListener('click', function(e) {
+          e.preventDefault();
+          doSend();
+        });
+        sendBtn.addEventListener('touchend', function(e) {
+          e.preventDefault();
+          doSend();
+        });
+        
+        chatInput.addEventListener('keydown', function(e) {
+          if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            doSend();
+          }
+        });
+        
+        statusMsg += ' | chat✓';
+        if (statusEl) statusEl.textContent = statusMsg;
+      }
+      
+      // Run both setups
+      setTimeout(setupSidebar, 100);
+      setTimeout(setupChat, 200);
+      
+      // Final status update
+      setTimeout(function() {
+        if (statusEl) statusEl.textContent = statusMsg;
+      }, 2000);
+    })();
+  </script>
+
 </body>
 </html>

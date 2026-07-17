@@ -4,10 +4,11 @@ Serves the dashboard UI and runs the Telegram bot concurrently.
 """
 import os
 import sys
-import asyncio
-import multiprocessing
+import json
 import logging
+import multiprocessing
 from http.server import HTTPServer, SimpleHTTPRequestHandler
+from urllib.parse import urlparse
 from pathlib import Path
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
@@ -17,10 +18,6 @@ PORT = int(os.getenv("PORT", "8080"))
 DASHBOARD_DIR = os.path.join(os.path.dirname(__file__), "docs")
 
 
-import json
-from http.server import HTTPServer, SimpleHTTPRequestHandler
-from urllib.parse import urlparse
-
 class DashboardHandler(SimpleHTTPRequestHandler):
     """Serve dashboard static files + API config endpoint."""
 
@@ -29,6 +26,20 @@ class DashboardHandler(SimpleHTTPRequestHandler):
 
     def do_GET(self):
         parsed = urlparse(self.path)
+        
+        # Health check endpoint
+        if parsed.path == '/health':
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.end_headers()
+            self.wfile.write(json.dumps({
+                'status': 'ok',
+                'version': '2.0',
+                'uptime': os.path.getmtime(__file__) if os.path.exists(__file__) else 0
+            }).encode())
+            return
+            
         if parsed.path == '/api/config':
             self.send_response(200)
             self.send_header('Content-Type', 'application/json')
@@ -45,13 +56,72 @@ class DashboardHandler(SimpleHTTPRequestHandler):
             }
             self.wfile.write(json.dumps(config).encode())
             return
+            
         super().do_GET()
+
+    def do_POST(self):
+        """Handle POST requests (chat API proxy)."""
+        parsed = urlparse(self.path)
+        
+        if parsed.path == '/api/chat':
+            content_length = int(self.headers.get('Content-Length', 0))
+            body = self.rfile.read(content_length) if content_length > 0 else b'{}'
+            
+            try:
+                data = json.loads(body)
+                api_key = os.getenv('OPENROUTER_API_KEY', '')
+                model = data.get('model', 'openai/gpt-4o-mini')
+                messages = data.get('messages', [])
+                
+                import urllib.request
+                
+                headers = {
+                    'Content-Type': 'application/json',
+                    'Authorization': f'Bearer {api_key}',
+                    'HTTP-Referer': self.headers.get('Origin', 'https://nexus-ai.app'),
+                    'X-Title': 'Nexus AI Dashboard',
+                }
+                
+                req_body = json.dumps({
+                    'model': model,
+                    'messages': messages,
+                    'temperature': 0.7,
+                    'max_tokens': 1500,
+                }).encode()
+                
+                req = urllib.request.Request(
+                    'https://openrouter.ai/api/v1/chat/completions',
+                    data=req_body,
+                    headers=headers,
+                    method='POST'
+                )
+                
+                with urllib.request.urlopen(req, timeout=60) as resp:
+                    result = json.loads(resp.read())
+                
+                self.send_response(200)
+                self.send_header('Content-Type', 'application/json')
+                self.send_header('Access-Control-Allow-Origin', '*')
+                self.end_headers()
+                self.wfile.write(json.dumps(result).encode())
+                
+            except Exception as e:
+                logger.error(f"[API] Chat proxy error: {e}")
+                self.send_response(500)
+                self.send_header('Content-Type', 'application/json')
+                self.send_header('Access-Control-Allow-Origin', '*')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': str(e)}).encode())
+            return
+            
+        self.send_response(404)
+        self.end_headers()
 
     def do_OPTIONS(self):
         self.send_response(200)
         self.send_header('Access-Control-Allow-Origin', '*')
-        self.send_header('Access-Control-Allow-Methods', 'GET, OPTIONS')
-        self.send_header('Access-Control-Allow-Headers', 'Content-Type')
+        self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+        self.send_header('Access-Control-Allow-Headers', 'Content-Type, Authorization')
         self.end_headers()
 
     def end_headers(self):
@@ -76,44 +146,40 @@ def run_bot():
     """Start the Telegram bot in a separate process."""
     bot_path = os.path.join(os.path.dirname(__file__), "bot", "bot.py")
     if not os.path.exists(bot_path):
-        print(f"Bot file not found: {bot_path}")
+        logger.warning(f"Bot file not found: {bot_path}")
         return
     
     # Change to bot directory for imports
     bot_dir = os.path.dirname(bot_path)
     sys.path.insert(0, bot_dir)
-    os.chdir(bot_dir)
     
-    # Import and run bot
-    import bot as bot_module
     try:
+        os.chdir(bot_dir)
+        import bot as bot_module
         bot_module.main()
     except Exception as e:
-        print(f"Bot error: {e}")
+        logger.error(f"Bot error: {e}")
 
 
 if __name__ == "__main__":
     logger.info("Starting Nexus AI Server...")
     
-    # Start dashboard in main thread
-    logger.info(f"Dashboard will be at http://0.0.0.0:{PORT}")
-    
     # Check if docs directory exists
     if not os.path.isdir(DASHBOARD_DIR):
         logger.warning(f"Dashboard directory not found: {DASHBOARD_DIR}")
         os.makedirs(DASHBOARD_DIR, exist_ok=True)
-        # Create a minimal index.html if missing
-        index_path = os.path.join(DASHBOARD_DIR, "index.html")
-        if not os.path.exists(index_path):
-            with open(index_path, "w") as f:
-                f.write("<html><body><h1>Nexus AI</h1><p>Dashboard loading...</p></body></html>")
     
     # Start bot in background process
     bot_process = multiprocessing.Process(target=run_bot)
+    bot_process.daemon = True
     bot_process.start()
     
     # Run dashboard in main thread
     try:
         run_dashboard()
+    except KeyboardInterrupt:
+        logger.info("Shutting down...")
     finally:
-        bot_process.terminate()
+        if bot_process.is_alive():
+            bot_process.terminate()
+            bot_process.join(timeout=5)

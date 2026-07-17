@@ -29,17 +29,37 @@ Help users analyze images, create videos, edit documents, and process media file
 };
 
 // ── Main Chat ──────────────────────────────────────────────
-const sendBtn  = document.getElementById('sendBtn');
-const chatInput = document.getElementById('chatInput');
-const chatMessages = document.getElementById('chatMessages');
+var sendBtn, chatInput, chatMessages;
 
-sendBtn?.addEventListener('click', () => sendMainChat());
-chatInput?.addEventListener('keydown', e => {
-  if (e.key === 'Enter' && !e.shiftKey) {
-    e.preventDefault();
-    sendMainChat();
+function initMainChat() {
+  sendBtn = document.getElementById('sendBtn');
+  chatInput = document.getElementById('chatInput');
+  chatMessages = document.getElementById('chatMessages');
+  
+  console.log('[Chat] initMainChat: sendBtn=' + (sendBtn ? 'ok' : 'null') + ' chatInput=' + (chatInput ? 'ok' : 'null') + ' chatMessages=' + (chatMessages ? 'ok' : 'null'));
+  
+  if (!sendBtn || !chatInput || !chatMessages) {
+    console.warn('[Chat] elements not found, retrying...');
+    setTimeout(initMainChat, 500);
+    return;
   }
-});
+  
+  sendBtn.addEventListener('click', function() { sendMainChat(); });
+  chatInput.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMainChat();
+    }
+  });
+  console.log('[Chat] Main chat initialized');
+}
+
+// Initialize after DOM ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initMainChat);
+} else {
+  initMainChat();
+}
 
 async function sendMainChat() {
   const text = chatInput?.value.trim();

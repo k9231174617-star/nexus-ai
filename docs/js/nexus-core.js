@@ -18,11 +18,11 @@ const NexusCore = {
     // ─── Initialization ─────────────────────────────────────
     async init() {
         console.log('[NexusCore] Initializing...');
-        this.registerSidebarItems();
-        this.registerChatCommands();
-        this.loadState();
-        this.startAnalytics();
-        this.injectStyles();
+        try { this.registerSidebarItems(); } catch(e) { console.warn('[NexusCore] registerSidebarItems:', e); }
+        try { this.registerChatCommands(); } catch(e) { console.warn('[NexusCore] registerChatCommands:', e); }
+        try { this.loadState(); } catch(e) { console.warn('[NexusCore] loadState:', e); }
+        try { this.startAnalytics(); } catch(e) { console.warn('[NexusCore] startAnalytics:', e); }
+        try { this.injectStyles(); } catch(e) { console.warn('[NexusCore] injectStyles:', e); }
         console.log('[NexusCore] Ready');
     },
 

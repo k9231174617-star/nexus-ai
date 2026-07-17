@@ -99,12 +99,20 @@ const $qa = sel => document.querySelectorAll(sel);
 
 // ── Init ───────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
-  initNav();
-  initSidebar();
-  initSession();
-  initContextBar();
-  populateFiles();
-  startSessionTimer();
+  console.log('[Nexus] init started');
+  try { initNav(); } catch(e) { console.error('[Nexus] initNav:', e); }
+  try { initSidebar(); } catch(e) { console.error('[Nexus] initSidebar:', e); }
+  try { initSession(); } catch(e) { console.error('[Nexus] initSession:', e); }
+  try { initContextBar(); } catch(e) { console.error('[Nexus] initContextBar:', e); }
+  try { populateFiles(); } catch(e) { console.error('[Nexus] populateFiles:', e); }
+  try { startSessionTimer(); } catch(e) { console.error('[Nexus] startSessionTimer:', e); }
+  console.log('[Nexus] init complete');
+  
+  // Debug: check sidebar state
+  var sidebar = document.getElementById('sidebar');
+  var menuToggle = document.getElementById('menuToggle');
+  console.log('[Nexus] sidebar:', sidebar ? 'found' : 'missing', 'menuToggle:', menuToggle ? 'found' : 'missing');
+  if (sidebar) console.log('[Nexus] sidebar display:', window.getComputedStyle(sidebar).display);
 });
 
 // ── Tab Navigation ─────────────────────────────────────────

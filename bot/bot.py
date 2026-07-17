@@ -298,12 +298,13 @@ async def cmd_stats(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not is_allowed(update.effective_user.id):
         await update.message.reply_text("⛔ Доступ запрещён.")
         return
-    update_stats(update.effective_user.id, "stats")
-    session = user_sessions.get(update.effective_user.id, {})
-    actions = session.get('actions', {})
-    msg = f"📊 **Статистика**\n\nСообщений: {session.get('messages', 0)}\nМодель: {LLM_MODELS.get(session.get('model', LLM_MODEL), session.get('model', LLM_MODEL))}\n\nДействия:\n"
-    for action, count in actions.items():
-        msg += f"  {action}: {count}\n"
+    user_id = update.effective_user.id
+    update_stats(user_id, "stats")
+    sess = user_sessions.get(user_id, {})
+    msg = f"""📊 **Ваша статистика**
+📨 Сообщений: {sess.get('messages', 0)}
+🤖 Модель: {LLM_MODELS.get(sess.get('model', LLM_MODEL), sess.get('model', LLM_MODEL))}
+🎯 Действия: {json.dumps(sess.get('actions', {}), ensure_ascii=False)}"""
     await update.message.reply_text(msg, parse_mode='Markdown')
 
 
@@ -311,12 +312,11 @@ async def cmd_settings(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not is_allowed(update.effective_user.id):
         await update.message.reply_text("⛔ Доступ запрещён.")
         return
-    update_stats(update.effective_user.id, "settings")
     await update.message.reply_text(
-        f"⚙️ **Настройки**\n\n"
+        "⚙️ **Настройки**\n\n"
         f"Текущая модель: {LLM_MODELS.get(LLM_MODEL, LLM_MODEL)}\n"
-        f"API ключ: {'✅ Настроен' if OPENROUTER_API_KEY else '❌ Не настроен'}\n\n"
-        f"Используйте /model для смены модели.",
+        f"API Key: {'✅ Настроен' if OPENROUTER_API_KEY else '❌ Не настроен'}\n\n"
+        "Используйте `/model` для смены модели.",
         parse_mode='Markdown'
     )
 
@@ -325,19 +325,24 @@ async def cmd_model(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not is_allowed(update.effective_user.id):
         await update.message.reply_text("⛔ Доступ запрещён.")
         return
-    update_stats(update.effective_user.id, "model")
     
+    if context.args:
+        model_id = context.args[0]
+        if model_id in LLM_MODELS:
+            global LLM_MODEL
+            LLM_MODEL = model_id
+            await update.message.reply_text(f"✅ Модель изменена на: {LLM_MODELS[model_id]}")
+        else:
+            await update.message.reply_text(f"❌ Неизвестная модель. Доступные: {', '.join(LLM_MODELS.keys())}")
+        return
+    
+    # Show model selection
     keyboard = []
     for model_id, name in LLM_MODELS.items():
-        tier = "🆓" if model_id in ["openai/gpt-4o-mini", "deepseek/deepseek-chat", "deepseek/deepseek-coder", 
-                                   "meta-llama/llama-3.2-3b-instruct", "mistralai/mistral-7b-instruct", 
-                                   "qwen/qwen-2.5-7b-instruct"] else "💎"
-        keyboard.append([InlineKeyboardButton(f"{tier} {name}", callback_data=f"model_{model_id}")])
-    keyboard.append([InlineKeyboardButton("🌍 Дашборд", url=WEB_DASHBOARD_URL)])
+        keyboard.append([InlineKeyboardButton(f"{'✅ ' if model_id == LLM_MODEL else ''}{name}", callback_data=f"model_{model_id}")])
     
     await update.message.reply_text(
-        f"🤖 **Выбор модели LLM**\n\nТекущая: {LLM_MODELS.get(LLM_MODEL, LLM_MODEL)}\n\n"
-        f"🆓 — бесплатные через OpenRouter\n💎 — платные (требуют баланс на OpenRouter)",
+        "🤖 **Выберите модель:**",
         parse_mode='Markdown',
         reply_markup=InlineKeyboardMarkup(keyboard)
     )
@@ -347,20 +352,39 @@ async def cmd_dashboard(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not is_allowed(update.effective_user.id):
         await update.message.reply_text("⛔ Доступ запрещён.")
         return
-    update_stats(update.effective_user.id, "dashboard")
     await update.message.reply_text(
-        f"🌍 **Веб-дашборд**\n\n"
-        f"Откройте: {WEB_DASHBOARD_URL}\n\n"
-        f"📱 Mini App доступен прямо в Telegram!",
-        parse_mode='Markdown',
+        f"🌍 Веб-дашборд: {WEB_DASHBOARD_URL}\n"
+        f"📱 Mini App: {WEB_DASHBOARD_URL}",
         reply_markup=InlineKeyboardMarkup([[
-            InlineKeyboardButton("🌍 Открыть дашборд", url=WEB_DASHBOARD_URL),
+            InlineKeyboardButton("🌍 Открыть", url=WEB_DASHBOARD_URL),
             InlineKeyboardButton("📱 Mini App", web_app=WebAppInfo(url=WEB_DASHBOARD_URL)),
         ]])
     )
 
 
-# ── Callback Handler ────────────────────────────────────────
+async def post_init(application: Application):
+    commands = [
+        BotCommand("start", "Главное меню"),
+        BotCommand("help", "Помощь"),
+        BotCommand("ask", "Задать вопрос AI"),
+        BotCommand("translate", "Перевести текст"),
+        BotCommand("code", "Генерация кода"),
+        BotCommand("summary", "Краткое содержание"),
+        BotCommand("stats", "Статистика"),
+        BotCommand("settings", "Настройки"),
+        BotCommand("model", "Выбрать модель LLM"),
+        BotCommand("dashboard", "Веб-дашборд"),
+    ]
+    try:
+        await application.bot.set_my_commands(commands)
+    except Exception as e:
+        logger.warning(f"Could not set commands: {e}")
+    logger.info(f"Bot started! Model: {LLM_MODELS.get(LLM_MODEL, LLM_MODEL)}")
+    if OPENROUTER_API_KEY:
+        logger.info("OpenRouter LLM connected!")
+    else:
+        logger.warning("OpenRouter not configured — using fallback responses")
+
 
 async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
@@ -370,41 +394,55 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await query.edit_message_text("⛔ Доступ запрещён.")
         return
     
-    user_id = query.from_user.id
     data = query.data
+    user_id = query.from_user.id
     
-    if data.startswith("model_"):
+    if data == "ask":
+        user_sessions[user_id]['waiting_for'] = 'ask'
+        await query.edit_message_text("🤔 Напишите ваш вопрос...")
+    elif data == "translate":
+        user_sessions[user_id]['waiting_for'] = 'translate'
+        await query.edit_message_text("🌐 Напишите текст для перевода...")
+    elif data == "code":
+        user_sessions[user_id]['waiting_for'] = 'code'
+        await query.edit_message_text("💻 Опишите задачу для генерации кода...")
+    elif data == "summary":
+        user_sessions[user_id]['waiting_for'] = 'summary'
+        await query.edit_message_text("📝 Напишите текст для краткого содержания...")
+    elif data == "stats":
+        sess = user_sessions.get(user_id, {})
+        msg = f"""📊 **Ваша статистика**
+📨 Сообщений: {sess.get('messages', 0)}
+🤖 Модель: {LLM_MODELS.get(sess.get('model', LLM_MODEL), sess.get('model', LLM_MODEL))}
+🎯 Действия: {json.dumps(sess.get('actions', {}), ensure_ascii=False)}"""
+        await query.edit_message_text(msg, parse_mode='Markdown')
+    elif data == "settings":
+        await query.edit_message_text(
+            "⚙️ **Настройки**\n\n"
+            f"Текущая модель: {LLM_MODELS.get(LLM_MODEL, LLM_MODEL)}\n"
+            f"API Key: {'✅ Настроен' if OPENROUTER_API_KEY else '❌ Не настроен'}\n\n"
+            "Используйте `/model` для смены модели.",
+            parse_mode='Markdown'
+        )
+    elif data == "model":
+        keyboard = []
+        for model_id, name in LLM_MODELS.items():
+            keyboard.append([InlineKeyboardButton(f"{'✅ ' if model_id == LLM_MODEL else ''}{name}", callback_data=f"model_{model_id}")])
+        await query.edit_message_text(
+            "🤖 **Выберите модель:**",
+            parse_mode='Markdown',
+            reply_markup=InlineKeyboardMarkup(keyboard)
+        )
+    elif data.startswith("model_"):
         model_id = data[6:]
         if model_id in LLM_MODELS:
+            global LLM_MODEL
+            LLM_MODEL = model_id
             user_sessions[user_id]['model'] = model_id
-            # Note: This only changes for this user's session
-            # To change globally, need env var or persistent config
-            await query.edit_message_text(
-                f"✅ Модель изменена на: {LLM_MODELS.get(model_id, model_id)}\n\n"
-                f"*(Применено для этой сессии. Для глобальной смены измените переменную окружения LLM_MODEL)*",
-                parse_mode='Markdown'
-            )
-        return
-    
-    # Handle action callbacks
-    if data in ['ask', 'translate', 'code', 'summary']:
-        user_sessions[user_id]['waiting_for'] = data
-        labels = {'ask': 'вопрос', 'translate': 'текст для перевода', 'code': 'описание кода', 'summary': 'текст для резюме'}
-        await query.edit_message_text(f"✍️ Напишите {labels.get(data, 'сообщение')}...")
-        return
-    
-    if data == 'stats':
-        await cmd_stats(query, context)
-        return
-    if data == 'settings':
-        await cmd_settings(query, context)
-        return
-    if data == 'model':
-        await cmd_model(query, context)
-        return
+            await query.edit_message_text(f"✅ Модель изменена на: {LLM_MODELS[model_id]}")
+        else:
+            await query.edit_message_text("❌ Неизвестная модель")
 
-
-# ── Message Handler ────────────────────────────────────────
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not is_allowed(update.effective_user.id):
@@ -421,7 +459,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     if waiting_for:
         user_sessions[user_id]['waiting_for'] = None
-        
+
         thinking_msg = await update.message.reply_text("🤔 Думаю...")
         
         system_prompt = "You are NEXUS AI — a powerful AI assistant. Answer concisely and helpfully. Use the language the user writes in."
@@ -452,7 +490,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         return
 
-    # Regular message = AI question
+    # Regular message - treat as AI question
     thinking_msg = await update.message.reply_text("🤔 Думаю...")
     
     system_prompt = "You are NEXUS AI — a powerful AI assistant. Answer concisely and helpfully. Use the language the user writes in."
@@ -473,30 +511,10 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 
-# ── Post Init ──────────────────────────────────────────────
-
-async def post_init(application: Application):
-    commands = [
-        BotCommand("start", "Главное меню"),
-        BotCommand("help", "Помощь"),
-        BotCommand("ask", "Задать вопрос AI"),
-        BotCommand("translate", "Перевести текст"),
-        BotCommand("code", "Генерация кода"),
-        BotCommand("summary", "Краткое содержание"),
-        BotCommand("stats", "Статистика"),
-        BotCommand("settings", "Настройки"),
-        BotCommand("model", "Выбрать модель LLM"),
-        BotCommand("dashboard", "Веб-дашборд"),
-    ]
-    try:
-        await application.bot.set_my_commands(commands)
-    except Exception as e:
-        logger.warning(f"Could not set commands: {e}")
-    logger.info(f"Bot started! Model: {LLM_MODELS.get(LLM_MODEL, LLM_MODEL)}")
-    if OPENROUTER_API_KEY:
-        logger.info("OpenRouter LLM connected!")
-    else:
-        logger.warning("OpenRouter not configured — using fallback responses")
+def run():
+    """Entry point for multiprocessing spawn - runs the bot."""
+    import asyncio
+    asyncio.run(main())
 
 
 async def main():
@@ -520,13 +538,9 @@ async def main():
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
     logger.info("Starting Nexus AI Telegram Bot...")
-    await app.run_polling(drop_pending_updates=True)
-
-
-def run():
-    """Entry point for multiprocessing spawn."""
-    asyncio.run(main())
+    # run_polling is a blocking call that manages its own event loop internally
+    app.run_polling(drop_pending_updates=True)
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    run()

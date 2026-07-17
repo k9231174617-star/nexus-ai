@@ -326,10 +326,10 @@ async def cmd_model(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("⛔ Доступ запрещён.")
         return
     
+    global LLM_MODEL
     if context.args:
         model_id = context.args[0]
         if model_id in LLM_MODELS:
-            global LLM_MODEL
             LLM_MODEL = model_id
             await update.message.reply_text(f"✅ Модель изменена на: {LLM_MODELS[model_id]}")
         else:
@@ -362,29 +362,7 @@ async def cmd_dashboard(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 
-async def post_init(application: Application):
-    commands = [
-        BotCommand("start", "Главное меню"),
-        BotCommand("help", "Помощь"),
-        BotCommand("ask", "Задать вопрос AI"),
-        BotCommand("translate", "Перевести текст"),
-        BotCommand("code", "Генерация кода"),
-        BotCommand("summary", "Краткое содержание"),
-        BotCommand("stats", "Статистика"),
-        BotCommand("settings", "Настройки"),
-        BotCommand("model", "Выбрать модель LLM"),
-        BotCommand("dashboard", "Веб-дашборд"),
-    ]
-    try:
-        await application.bot.set_my_commands(commands)
-    except Exception as e:
-        logger.warning(f"Could not set commands: {e}")
-    logger.info(f"Bot started! Model: {LLM_MODELS.get(LLM_MODEL, LLM_MODEL)}")
-    if OPENROUTER_API_KEY:
-        logger.info("OpenRouter LLM connected!")
-    else:
-        logger.warning("OpenRouter not configured — using fallback responses")
-
+# ── Callback Handler ────────────────────────────────────────
 
 async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
@@ -435,14 +413,16 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
     elif data.startswith("model_"):
         model_id = data[6:]
+        global LLM_MODEL
         if model_id in LLM_MODELS:
-            global LLM_MODEL
             LLM_MODEL = model_id
             user_sessions[user_id]['model'] = model_id
             await query.edit_message_text(f"✅ Модель изменена на: {LLM_MODELS[model_id]}")
         else:
             await query.edit_message_text("❌ Неизвестная модель")
 
+
+# ── Message Handler ────────────────────────────────────────
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not is_allowed(update.effective_user.id):
@@ -511,10 +491,39 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 
+# ── Post Init ──────────────────────────────────────────────
+
+async def post_init(application: Application):
+    commands = [
+        BotCommand("start", "Главное меню"),
+        BotCommand("help", "Помощь"),
+        BotCommand("ask", "Задать вопрос AI"),
+        BotCommand("translate", "Перевести текст"),
+        BotCommand("code", "Генерация кода"),
+        BotCommand("summary", "Краткое содержание"),
+        BotCommand("stats", "Статистика"),
+        BotCommand("settings", "Настройки"),
+        BotCommand("model", "Выбрать модель LLM"),
+        BotCommand("dashboard", "Веб-дашборд"),
+    ]
+    try:
+        await application.bot.set_my_commands(commands)
+    except Exception as e:
+        logger.warning(f"Could not set commands: {e}")
+    logger.info(f"Bot started! Model: {LLM_MODELS.get(LLM_MODEL, LLM_MODEL)}")
+    if OPENROUTER_API_KEY:
+        logger.info("OpenRouter LLM connected!")
+    else:
+        logger.warning("OpenRouter not configured — using fallback responses")
+
+
 def run():
     """Entry point for multiprocessing spawn - runs the bot."""
-    # This runs app.run_polling() which manages its own event loop
-    # Do NOT use asyncio.run() here - run_polling handles the event loop
+    import asyncio
+    asyncio.run(main())
+
+
+async def main():
     if not BOT_TOKEN:
         logger.error("TELEGRAM_BOT_TOKEN not set!")
         return
@@ -535,7 +544,7 @@ def run():
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
     logger.info("Starting Nexus AI Telegram Bot...")
-    # run_polling is a blocking call that manages its own event loop
+    # run_polling is a blocking call that manages its own event loop internally
     app.run_polling(drop_pending_updates=True)
 
 

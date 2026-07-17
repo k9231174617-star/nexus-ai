@@ -2,16 +2,15 @@ FROM python:3.12-slim
 
 WORKDIR /app
 
-# Install dependencies
+# Install dependencies for both bot and server
 COPY bot/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy bot files
-COPY bot/bot.py .
-
-# Copy env example (optional, won't fail if missing)
-COPY bot/.env.example .env.example
+# Copy all project files
+COPY server.py .
+COPY bot/ ./bot/
+COPY docs/ ./docs/
 
 EXPOSE 8080
 
-CMD ["python", "bot.py"]
+CMD ["python", "server.py"]

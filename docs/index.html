@@ -3,15 +3,51 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <title>NEXUS AI — Agent Dashboard</title>
   <link rel="stylesheet" href="styles/main.css"/>
   <link rel="stylesheet" href="styles/components.css"/>
   <link rel="stylesheet" href="styles/animations.css"/>
+  <style>
+    /* Telegram Mini App overrides */
+    body.tg-mini-app .app-shell {
+      border-radius: 0;
+      max-height: 100vh;
+    }
+    body.tg-mini-app .sidebar {
+      height: 100vh;
+    }
+    body.tg-mini-app .main-content {
+      height: 100vh;
+    }
+    .tg-user {
+      text-align: center;
+      font-size: 11px;
+      color: #888;
+      margin-top: 4px;
+    }
+  </style>
 </head>
 <body>
   <!-- Ambient background grid -->
   <div class="bg-grid" aria-hidden="true"></div>
   <div class="bg-glow" aria-hidden="true"></div>
+
+  <!-- Telegram Mini App Init -->
+  <script>
+    let tg = window.Telegram?.WebApp;
+    if (tg) {
+      tg.expand();
+      tg.ready();
+      document.documentElement.classList.add('tg-mini-app');
+      // Set theme based on Telegram
+      if (tg.colorScheme === 'dark') {
+        document.documentElement.classList.add('dark');
+      }
+      // Set header color
+      tg.setHeaderColor('#0a0a1a');
+    }
+  </script>
 
   <!-- App Shell -->
   <div class="app-shell">
@@ -44,7 +80,15 @@
         <span class="status-dot pulse"></span>
         <span class="status-text">Agent Active</span>
         <span class="status-model" id="activeModelBadge">GPT-4o</span>
+        <span class="tg-user" id="tgUserName" style="display:none;font-size:11px;color:#888;margin-top:4px;"></span>
       </div>
+      <script>
+        if (tg && tg.initDataUnsafe?.user) {
+          const u = tg.initDataUnsafe.user;
+          document.getElementById('tgUserName').style.display = 'block';
+          document.getElementById('tgUserName').textContent = '👤 ' + (u.first_name || '') + ' ' + (u.last_name || '');
+        }
+      </script>
 
       <!-- Nav Items -->
       <nav class="sidebar-nav">

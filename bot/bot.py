@@ -5,7 +5,7 @@ import re
 import aiohttp
 import asyncio
 from datetime import datetime, timedelta
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, BotCommand
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, BotCommand, WebAppInfo
 from telegram.ext import Application, CommandHandler, MessageHandler, CallbackQueryHandler, filters, ContextTypes
 from dotenv import load_dotenv
 
@@ -57,6 +57,7 @@ HELP_TEXT = f"""🤖 **Nexus AI — Telegram Bot**
 /dashboard — Открыть веб-дашборд
 
 🔗 Дашборд: {WEB_DASHBOARD_URL}
+📱 Mini App: {WEB_DASHBOARD_URL}
 """
 
 MAIN_KEYBOARD = InlineKeyboardMarkup([
@@ -67,7 +68,8 @@ MAIN_KEYBOARD = InlineKeyboardMarkup([
      InlineKeyboardButton("📊 Статистика", callback_data="stats")],
     [InlineKeyboardButton("⚙️ Настройки", callback_data="settings"),
      InlineKeyboardButton("🤖 Модель", callback_data="model")],
-    [InlineKeyboardButton("🌍 Веб-дашборд", url=WEB_DASHBOARD_URL)],
+    [InlineKeyboardButton("🌍 Веб-дашборд", url=WEB_DASHBOARD_URL),
+     InlineKeyboardButton("📱 Mini App", web_app=WebAppInfo(url=WEB_DASHBOARD_URL))],
 ])
 
 

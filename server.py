@@ -166,7 +166,7 @@ def run_bot():
         bot_module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(bot_module)
         
-        # Call the bot's run() function - it handles its own event loop via run_polling()
+        # Call the bot's run() function - run_polling manages its own event loop
         if hasattr(bot_module, 'run'):
             bot_module.run()
         else:

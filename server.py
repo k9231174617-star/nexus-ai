@@ -6,8 +6,8 @@ import os
 import sys
 import json
 import logging
-import threading
 import asyncio
+import threading
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 from urllib.parse import urlparse
 from pathlib import Path
@@ -135,7 +135,7 @@ class DashboardHandler(SimpleHTTPRequestHandler):
 
 
 def run_dashboard():
-    """Start the dashboard HTTP server."""
+    """Start the dashboard HTTP server in a separate thread."""
     os.makedirs(DASHBOARD_DIR, exist_ok=True)
     server = HTTPServer(("0.0.0.0", PORT), DashboardHandler)
     logger.info(f"Dashboard running on http://0.0.0.0:{PORT}")
@@ -162,13 +162,7 @@ async def run_bot_async():
         
         # Call the bot's main function (async)
         if hasattr(bot_module, 'main'):
-            import inspect
-            if inspect.iscoroutinefunction(bot_module.main):
-                await bot_module.main()
-            else:
-                # If it's sync, run in executor
-                loop = asyncio.get_event_loop()
-                await loop.run_in_executor(None, bot_module.main)
+            await bot_module.main()
         else:
             logger.error("Bot module has no main() function")
     except Exception as e:

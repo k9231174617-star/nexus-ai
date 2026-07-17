@@ -2,21 +2,21 @@
 Nexus AI — Combined Web Dashboard + Telegram Bot Server
 Serves the dashboard UI and runs the Telegram bot concurrently.
 """
-# CRITICAL: Set multiprocessing start method BEFORE any other imports
-# This is required for python-telegram-bot signal handlers to work
-import multiprocessing
-try:
-    multiprocessing.set_start_method('spawn', force=True)
-except RuntimeError:
-    pass
-
 import os
 import sys
 import json
 import logging
+import multiprocessing
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 from urllib.parse import urlparse
 from pathlib import Path
+
+# CRITICAL: Use 'spawn' to avoid inheriting parent's event loop
+# This is required for python-telegram-bot signal handlers to work
+try:
+    multiprocessing.set_start_method('spawn', force=True)
+except RuntimeError:
+    pass
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger(__name__)
@@ -166,9 +166,8 @@ def run_bot():
         bot_module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(bot_module)
         
-        # Call the bot's main function - it should be async
+        # Call the bot's main function - it manages its own event loop
         if hasattr(bot_module, 'main'):
-            # Run the async main - asyncio.run creates a fresh event loop
             import asyncio
             asyncio.run(bot_module.main())
         else:

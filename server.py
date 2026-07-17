@@ -6,7 +6,7 @@ import os
 import sys
 import json
 import logging
-import threading
+import multiprocessing
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 from urllib.parse import urlparse
 from pathlib import Path
@@ -143,7 +143,7 @@ def run_dashboard():
 
 
 def run_bot():
-    """Start the Telegram bot in a background thread."""
+    """Start the Telegram bot in a separate process."""
     bot_path = os.path.join(os.path.dirname(__file__), "bot", "bot.py")
     if not os.path.exists(bot_path):
         logger.warning(f"Bot file not found: {bot_path}")
@@ -159,13 +159,17 @@ def run_bot():
         bot_module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(bot_module)
         
-        # Create new event loop for this thread
-        import asyncio
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        bot_module.main()
+        # Call the bot's main function
+        if hasattr(bot_module, 'main'):
+            # Run the async main in a new event loop
+            import asyncio
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            loop.run_until_complete(bot_module.main())
+        else:
+            logger.error("Bot module has no main() function")
     except Exception as e:
-        logger.error(f"Bot thread error: {e}", exc_info=True)
+        logger.error(f"Bot process error: {e}", exc_info=True)
 
 
 if __name__ == "__main__":
@@ -176,13 +180,17 @@ if __name__ == "__main__":
         logger.warning(f"Dashboard directory not found: {DASHBOARD_DIR}")
         os.makedirs(DASHBOARD_DIR, exist_ok=True)
     
-    # Start bot in background thread (not multiprocessing!)
-    bot_thread = threading.Thread(target=run_bot, name="TelegramBot", daemon=True)
-    bot_thread.start()
-    logger.info("Telegram bot thread started")
+    # Start bot in separate process (required for signal handlers)
+    bot_process = multiprocessing.Process(target=run_bot, name="TelegramBot", daemon=True)
+    bot_process.start()
+    logger.info("Telegram bot process started")
     
-    # Run dashboard in main thread
+    # Run dashboard in main process
     try:
         run_dashboard()
     except KeyboardInterrupt:
         logger.info("Shutting down...")
+    finally:
+        if bot_process.is_alive():
+            bot_process.terminate()
+            bot_process.join(timeout=5)

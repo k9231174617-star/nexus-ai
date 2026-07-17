@@ -1,0 +1,23 @@
+{
+  "id": "nexus-skill-hub",
+  "name": "Skill Hub",
+  "version": "1.0.0",
+  "description": "50+ AI agent skills из awesome-agent-skills: MCP, LLM, Security, Android, Browser, Testing, Observability и другие. Интеграция с PluginManager, MCPClient, AgentCoordinator.",
+  "author": "Nexus AI",
+  "main": "plugin.js",
+  "hooks": ["sidebar:items", "chat:commands", "app:init", "app:render"],
+  "permissions": ["ai:generate", "files:read", "network:connect"],
+  "skills": [
+    "mcp-builder", "composio", "agents-sdk", "openai-docs",
+    "gemini-api", "transformers", "diffusion", "qdrant-skills",
+    "trailofbits-static-analysis", "trailofbits-supply-chain",
+    "espresso-skill", "appium-skill",
+    "stagehand", "playwright-skill", "webapp-testing",
+    "mongodb-schema-design", "redis-development",
+    "api-skill", "jest-skill",
+    "sentry-feature-setup", "sentry-performance",
+    "anthropics-pdf", "anthropics-docx",
+    "ship", "cicd-pipeline-skill",
+    "recursive-decomposition", "tweetclaw", "figma-mcp"
+  ]
+}

@@ -88,5 +88,25 @@
         return '<p>Configure MCP server connections in the MCP Servers tab</p>';
     }
 
-    console.log('[MCP Bridge] Plugin loaded');
+    // ── Skill Registry Integration ──────────────────────────
+    const sr = window.SkillRegistry;
+    if (sr) {
+        // Register MCP-related skills as MCP server templates
+        const mcpSkills = sr.getByCategory('mcp');
+        mcpSkills.forEach(skill => {
+            const existing = connections.find(c => c.name === skill.name);
+            if (!existing) {
+                connections.push({
+                    name: skill.name,
+                    url: `https://officialskills.sh/${skill.company}/skills/${skill.id}`,
+                    status: 'registered',
+                    skill: true,
+                });
+            }
+        });
+        localStorage.setItem('nexus_mcp_connections', JSON.stringify(connections));
+        console.log(`[MCP Bridge] Linked ${mcpSkills.length} MCP skills`);
+    }
+
+    console.log('[MCP Bridge] Plugin loaded with Skill Registry');
 })();

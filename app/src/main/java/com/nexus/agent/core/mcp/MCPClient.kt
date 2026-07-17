@@ -195,6 +195,110 @@ class MCPClient @Inject constructor(
     private fun String.toRequestBody(contentType: String) =
         RequestBody.create(MediaType.parse(contentType), this)
 
+    /** Skill Registry — discover and route skills from awesome-agent-skills catalog */
+    data class SkillDefinition(
+        val id: String,
+        val name: String,
+        val company: String,
+        val category: String,
+        val description: String,
+        val url: String,
+        val tier: String, // "free" or "paid"
+        val tags: List<String> = emptyList(),
+    )
+
+    private val _skills = MutableStateFlow<List<SkillDefinition>>(emptyList())
+    val skills: StateFlow<List<SkillDefinition>> = _skills
+
+    /** Register a skill from the catalog */
+    fun registerSkill(skill: SkillDefinition) {
+        if (_skills.value.none { it.id == skill.id }) {
+            _skills.value = _skills.value + skill
+        }
+    }
+
+    /** Register multiple skills at once */
+    fun registerSkills(skills: List<SkillDefinition>) {
+        val existingIds = _skills.value.map { it.id }.toSet()
+        val newSkills = skills.filter { it.id !in existingIds }
+        if (newSkills.isNotEmpty()) {
+            _skills.value = _skills.value + newSkills
+        }
+    }
+
+    /** Find skills matching a query */
+    fun findSkills(query: String): List<SkillDefinition> {
+        val q = query.lowercase()
+        return _skills.value.filter { s ->
+            s.name.lowercase().contains(q) ||
+            s.description.lowercase().contains(q) ||
+            s.tags.any { it.contains(q) } ||
+            s.category.contains(q)
+        }
+    }
+
+    /** Get skills by category */
+    fun getSkillsByCategory(category: String): List<SkillDefinition> =
+        _skills.value.filter { it.category == category }
+
+    /** Get all skill categories */
+    fun getSkillCategories(): List<String> =
+        _skills.value.map { it.category }.distinct().sorted()
+
+    /** Get skill stats */
+    fun getSkillStats(): Map<String, Int> = mapOf(
+        "total" to _skills.value.size,
+        "categories" to getSkillCategories().size,
+    )
+
+    /** Route a request to the best matching skill */
+    suspend fun routeToSkill(query: String): String {
+        val matches = findSkills(query)
+        if (matches.isEmpty()) return "No matching skill found for: $query"
+        val best = matches.first()
+        return "Routed to skill: ${best.name} (${best.company}) — ${best.description}"
+    }
+
+    /** Register default skills from awesome-agent-skills catalog */
+    fun registerDefaultSkills() {
+        registerSkills(listOf(
+            // MCP & Tools
+            SkillDefinition("mcp-builder", "MCP Builder", "anthropics", "mcp",
+                "Create MCP servers to integrate external APIs", "https://officialskills.sh/anthropics/skills/mcp-builder", "free", listOf("mcp", "tools", "api")),
+            SkillDefinition("composio", "Composio", "composiohq", "mcp",
+                "Connect AI agents to 1000+ external apps", "https://officialskills.sh/composiohq/skills/composio", "free", listOf("mcp", "integration")),
+            // LLM / AI
+            SkillDefinition("gemini-api", "Gemini API", "google-gemini", "llm-ai",
+                "Gemini API for text, chat, streaming, image generation", "https://officialskills.sh/google-gemini/skills/gemini-interactions-api", "free", listOf("llm", "gemini", "multimodal")),
+            SkillDefinition("qdrant-skills", "Qdrant Vector Search", "qdrant", "llm-ai",
+                "Vector search scaling, optimization, quality, monitoring", "https://officialskills.sh/qdrant/skills", "free", listOf("vector", "search", "rag")),
+            // Security
+            SkillDefinition("static-analysis", "Static Security Analysis", "trailofbits", "security",
+                "Static security code analysis by Trail of Bits", "https://officialskills.sh/trailofbits/skills/static-analysis", "free", listOf("security", "code-review")),
+            SkillDefinition("fuzzing", "Fuzz Testing", "trailofbits", "security",
+                "Fuzz testing for vulnerability discovery", "https://officialskills.sh/trailofbits/skills/fuzzing", "free", listOf("security", "testing")),
+            // Android
+            SkillDefinition("espresso-skill", "Espresso UI Tests", "testmu-ai", "android",
+                "Espresso UI tests for Android in Kotlin/Java", "https://github.com/LambdaTest/agent-skills/tree/main/espresso-skill", "free", listOf("android", "testing")),
+            // Browser
+            SkillDefinition("stagehand", "Stagehand Browser Automation", "browserbase", "browser",
+                "AI-driven browser automation framework", "https://officialskills.sh/browserbase/skills/stagehand", "free", listOf("browser", "automation")),
+            // Database
+            SkillDefinition("redis-development", "Redis Development", "redis", "database",
+                "Redis: data structures, vector search, caching", "https://officialskills.sh/redis/skills/redis-development", "free", listOf("database", "caching")),
+            // Testing
+            SkillDefinition("api-skill", "API Testing Suite", "testmu-ai", "testing",
+                "Design, mock, document, test REST/GraphQL/gRPC APIs", "https://github.com/LambdaTest/agent-skills/tree/main/api-skill", "free", listOf("testing", "api")),
+            // Observability
+            SkillDefinition("sentry-feature-setup", "Sentry AI Monitoring", "getsentry", "observability",
+                "Sentry: AI monitoring, OTel pipelines, alerts", "https://officialskills.sh/getsentry/skills/sentry-feature-setup", "free", listOf("monitoring", "sentry")),
+            // Community
+            SkillDefinition("recursive-decomposition", "Recursive Decomposition", "massimodeluisa", "community",
+                "Handle 100+ files / 50k+ token context", "https://github.com/massimodeluisa/recursive-decomposition-skill", "free", listOf("context", "large-files")),
+        ))
+        android.util.Log.i("MCPClient", "Registered ${_skills.value.size} default skills")
+    }
+
     fun destroy() {
         scope.cancel()
         sessions.values.forEach { it.close(1001, "Shutdown") }

@@ -225,6 +225,13 @@ object AppModule {
     fun provideFallbackChain(): FallbackChain = FallbackChain()
 
     @Provides @Singleton
+    fun provideSkillManager(
+        mcpClient: com.nexus.agent.core.mcp.MCPClient,
+        agentCoordinator: com.nexus.agent.core.agents.AgentCoordinator,
+    ): com.nexus.agent.core.skills.SkillManager =
+        com.nexus.agent.core.skills.SkillManager(mcpClient, agentCoordinator)
+
+    @Provides @Singleton
     fun provideAdvancedRouter(
         prefs: RoutePreferences,
         health: ProviderHealth,

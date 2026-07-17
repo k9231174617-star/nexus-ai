@@ -1,0 +1,18 @@
+{
+  "name": "nexus-ai-skills",
+  "version": "2.0.0",
+  "description": "Nexus AI — 50+ agent skills from awesome-agent-skills: MCP, LLM, Security, Android, Browser, Testing, Observability, Media, CI/CD. Auto-routes skills via AgentCoordinator.",
+  "author": "Nexus AI",
+  "homepage": "https://github.com/k9231174617-star/nexus-ai",
+  "license": "Apache-2.0",
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Nexus AI Skills",
+    "shortDescription": "Nexus AI — 50+ agent skills",
+    "longDescription": "50+ integrated skills from awesome-agent-skills: MCP/API integration, LLM/RAG, security audit, Android/mobile, browser automation, databases, testing, observability, media processing, and CI/CD pipelines.",
+    "category": "Productivity",
+    "capabilities": ["Interactive", "Read", "Write", "Network"],
+    "brandColor": "#FF0A2F",
+    "defaultPrompt": ["Use MCP to integrate an API", "Audit this code for vulnerabilities", "Run Android UI tests with Espresso", "Set up Sentry monitoring"]
+  }
+}

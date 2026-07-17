@@ -8,10 +8,15 @@ import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import com.nexus.agent.databinding.ActivityMainBinding
 import com.nexus.agent.ui.common.ToastManager
+import com.nexus.agent.core.skills.SkillManager
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
+
+    @Inject
+    lateinit var skillManager: SkillManager
 
     private lateinit var binding: ActivityMainBinding
     private lateinit var navController: NavController
@@ -25,6 +30,9 @@ class MainActivity : AppCompatActivity() {
         setupNavigation()
         setupDrawer()
         setupStatusBar()
+        
+        // Initialize skill registry from awesome-agent-skills catalog
+        skillManager.initialize()
     }
 
     private fun setupNavigation() {

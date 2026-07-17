@@ -115,15 +115,6 @@ document.addEventListener('DOMContentLoaded', () => {
   try { startSessionTimer(); } catch(e) { console.error('[Nexus] startSessionTimer:', e); }
   
   console.log('[Nexus] init complete');
-  
-  // Debug: check sidebar state
-  var sidebar = document.getElementById('sidebar');
-  var menuToggle = document.getElementById('menuToggle') || document.querySelector('.topbar-menu');
-  console.log('[Nexus] sidebar:', sidebar ? 'found' : 'missing', 'menuToggle:', menuToggle ? 'found' : 'missing');
-  if (sidebar) {
-    console.log('[Nexus] sidebar display:', window.getComputedStyle(sidebar).display);
-    console.log('[Nexus] sidebar transform:', window.getComputedStyle(sidebar).transform);
-  }
 });
 
 // ── Tab Navigation ─────────────────────────────────────────
@@ -180,37 +171,70 @@ function switchTab(tab) {
 
 // ── Sidebar ────────────────────────────────────────────────
 function initSidebar() {
-  const sidebar   = document.getElementById('sidebar');
-  const overlay   = document.getElementById('overlay');
-  const menuBtn   = document.getElementById('menuToggle');
-  const closeBtn  = document.getElementById('sidebarClose');
+  const sidebar  = document.getElementById('sidebar');
+  const overlay  = document.getElementById('overlay');
+  const menuBtn  = document.getElementById('menuToggle');
+  const closeBtn = document.getElementById('sidebarClose');
+
+  if (!sidebar) {
+    console.error('[Nexus] sidebar element not found!');
+    return;
+  }
+
+  // Check if desktop (width > 768px)
+  const isDesktop = () => window.innerWidth > 768;
 
   function openSidebar() {
     sidebar.classList.add('open');
-    overlay.style.display = 'block';
-    requestAnimationFrame(() => { overlay.style.opacity = '1'; });
+    if (overlay && !isDesktop()) {
+      overlay.style.display = 'block';
+      // Double rAF guarantees browser applied display:block before transition
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        overlay.style.opacity = '1';
+      }));
+    }
   }
 
   function closeSidebar() {
     sidebar.classList.remove('open');
-    overlay.style.opacity = '0';
-    setTimeout(() => { overlay.style.display = 'none'; }, 280);
+    if (overlay) {
+      overlay.style.opacity = '0';
+      setTimeout(() => { overlay.style.display = 'none'; }, 280);
+    }
   }
 
-  menuBtn?.addEventListener('click', openSidebar);
+  // On desktop, sidebar is always open
+  if (isDesktop()) {
+    sidebar.classList.add('open');
+  }
+
+  menuBtn?.addEventListener('click', () => {
+    if (sidebar.classList.contains('open') && !isDesktop()) {
+      closeSidebar();
+    } else {
+      openSidebar();
+    }
+  });
+
   closeBtn?.addEventListener('click', closeSidebar);
   overlay?.addEventListener('click', closeSidebar);
 
-  // Close on Escape
   document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') closeSidebar();
+    if (e.key === 'Escape' && !isDesktop()) closeSidebar();
+  });
+
+  // Recalculate on window resize
+  window.addEventListener('resize', () => {
+    if (isDesktop()) {
+      sidebar.classList.add('open');
+      if (overlay) overlay.style.display = 'none';
+    }
   });
 
   // Expose globally for inline handlers
   window.openSidebar  = openSidebar;
   window.closeSidebar = closeSidebar;
-
-  console.log('[Nexus] sidebar initialized');
+  console.log('[Nexus] sidebar initialized, desktop:', isDesktop());
 }
 
 // ── Session Timer ──────────────────────────────────────────

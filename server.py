@@ -6,7 +6,7 @@ import os
 import sys
 import json
 import logging
-import multiprocessing
+import threading
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 from urllib.parse import urlparse
 from pathlib import Path
@@ -143,22 +143,29 @@ def run_dashboard():
 
 
 def run_bot():
-    """Start the Telegram bot in a separate process."""
+    """Start the Telegram bot in a background thread."""
     bot_path = os.path.join(os.path.dirname(__file__), "bot", "bot.py")
     if not os.path.exists(bot_path):
         logger.warning(f"Bot file not found: {bot_path}")
         return
-    
-    # Change to bot directory for imports
+
     bot_dir = os.path.dirname(bot_path)
-    sys.path.insert(0, bot_dir)
-    
+    if bot_dir not in sys.path:
+        sys.path.insert(0, bot_dir)
+
     try:
-        os.chdir(bot_dir)
-        import bot as bot_module
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("bot", bot_path)
+        bot_module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(bot_module)
+        
+        # Create new event loop for this thread
+        import asyncio
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
         bot_module.main()
     except Exception as e:
-        logger.error(f"Bot error: {e}")
+        logger.error(f"Bot thread error: {e}", exc_info=True)
 
 
 if __name__ == "__main__":
@@ -169,17 +176,13 @@ if __name__ == "__main__":
         logger.warning(f"Dashboard directory not found: {DASHBOARD_DIR}")
         os.makedirs(DASHBOARD_DIR, exist_ok=True)
     
-    # Start bot in background process
-    bot_process = multiprocessing.Process(target=run_bot)
-    bot_process.daemon = True
-    bot_process.start()
+    # Start bot in background thread (not multiprocessing!)
+    bot_thread = threading.Thread(target=run_bot, name="TelegramBot", daemon=True)
+    bot_thread.start()
+    logger.info("Telegram bot thread started")
     
     # Run dashboard in main thread
     try:
         run_dashboard()
     except KeyboardInterrupt:
         logger.info("Shutting down...")
-    finally:
-        if bot_process.is_alive():
-            bot_process.terminate()
-            bot_process.join(timeout=5)

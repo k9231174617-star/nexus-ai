@@ -23,29 +23,48 @@
     };
   </script>
   <script>
-    // Sync-load server config before anything else
+    // Async config loader — works on Railway and GitHub Pages
     (function() {
+      // 1. First check if key already exists in localStorage
       try {
-        var xhr = new XMLHttpRequest();
-        xhr.open('GET', '/api/config', false);
-        xhr.send();
-        if (xhr.status === 200) {
-          var cfg = JSON.parse(xhr.responseText);
-          var s;
-          try { s = JSON.parse(localStorage.getItem('nexus_settings') || '{}'); } catch(e) { s = {}; }
-          if (!s.apiKey || s.apiKey.length < 10) {
-            s.apiKey = cfg.apiKey;
-            s.endpoint = cfg.endpoint || 'https://openrouter.ai/api/v1/chat/completions';
-            s.mainModel = cfg.mainModel;
-            s.codeModel = cfg.codeModel;
-            s.uniModel = cfg.uniModel;
-            localStorage.setItem('nexus_settings', JSON.stringify(s));
-          } else if (!s.endpoint) {
-            s.endpoint = cfg.endpoint || 'https://openrouter.ai/api/v1/chat/completions';
-            localStorage.setItem('nexus_settings', JSON.stringify(s));
-          }
+        var s = JSON.parse(localStorage.getItem('nexus_settings') || '{}');
+        if (s.apiKey && s.apiKey.length > 10) {
+          console.log('[Config] Using saved API key from localStorage');
+          return; // key already exists — nothing to do
         }
-      } catch(e) { console.warn('Config load failed:', e); }
+      } catch(e) {}
+
+      // 2. Try to load from server (works on Railway)
+      var isLocalOrRailway = (
+        window.location.hostname === 'localhost' ||
+        window.location.hostname.includes('railway.app') ||
+        window.location.hostname.includes('up.railway.app') ||
+        window.location.port !== ''
+      );
+
+      if (!isLocalOrRailway) {
+        console.log('[Config] GitHub Pages detected — skipping /api/config fetch');
+        return;
+      }
+
+      // Async fetch (doesn't block render)
+      fetch('/api/config', { cache: 'no-store' })
+        .then(function(r) { return r.ok ? r.json() : Promise.reject(r.status); })
+        .then(function(cfg) {
+          try {
+            var s = JSON.parse(localStorage.getItem('nexus_settings') || '{}');
+            if (cfg.apiKey && cfg.apiKey.length > 10) {
+              s.apiKey    = cfg.apiKey;
+              s.endpoint  = cfg.endpoint  || 'https://openrouter.ai/api/v1/chat/completions';
+              s.mainModel = cfg.mainModel || 'openai/gpt-4o-mini';
+              s.codeModel = cfg.codeModel || 'deepseek/deepseek-coder';
+              s.uniModel  = cfg.uniModel  || 'openai/gpt-4o-mini';
+              localStorage.setItem('nexus_settings', JSON.stringify(s));
+              console.log('[Config] ✅ API key loaded from server');
+            }
+          } catch(e) { console.warn('[Config] Failed to save server config:', e); }
+        })
+        .catch(function(e) { console.log('[Config] Server config not available:', e); });
     })();
   </script>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>

@@ -105,298 +105,385 @@ async def query_llm(prompt: str, system_prompt: str = "Ты полезный AI 
                     "model": LLM_MODEL,
                     "messages": [
                         {"role": "system", "content": system_prompt},
-                        {"role": "user", "content": prompt},
+                        {"role": "user", "content": prompt}
                     ],
-                    "max_tokens": 2048,
                     "temperature": 0.7,
+                    "max_tokens": 1500,
                 },
-                timeout=aiohttp.ClientTimeout(total=60),
+                timeout=aiohttp.ClientTimeout(total=60)
             ) as resp:
-                if resp.status == 200:
-                    data = await resp.json()
-                    return data["choices"][0]["message"]["content"]
-                else:
-                    error_text = await resp.text()
-                    logger.error(f"OpenRouter error {resp.status}: {error_text[:200]}")
-                    return f"⚠️ Ошибка LLM ({resp.status}). Использую запасной ответ.\n\n{generate_fallback_response(prompt)}"
+                if resp.status != 200:
+                    err = await resp.text()
+                    logger.error(f"OpenRouter API error {resp.status}: {err}")
+                    return generate_fallback_response(prompt)
+                data = await resp.json()
+                return data["choices"][0]["message"]["content"]
     except asyncio.TimeoutError:
-        return "⏱️ Превышено время ожидания LLM. Попробуйте ещё раз."
+        logger.error("OpenRouter API timeout")
+        return "⏳ Превышено время ожидания ответа от LLM. Попробуйте ещё раз."
     except Exception as e:
-        logger.error(f"LLM query failed: {e}")
-        return f"⚠️ Не удалось подключиться к LLM.\n\n{generate_fallback_response(prompt)}"
-
-
-async def query_llm_code(prompt: str, language: str = "") -> str:
-    """Generate code via LLM."""
-    system = "Ты эксперт по программированию. Отвечай ТОЛЬКО кодом без лишних пояснений."
-    if language:
-        system += f" Язык: {language}."
-    return await query_llm(prompt, system)
+        logger.error(f"LLM query error: {e}")
+        return generate_fallback_response(prompt)
 
 
 def generate_fallback_response(prompt: str) -> str:
-    """Fallback when LLM is not available."""
-    prompt_lower = prompt.lower()
-    if any(w in prompt_lower for w in ["привет", "hello", "hi", "здравствуй"]):
-        return "👋 Привет! Чем могу помочь?"
-    if any(w in prompt_lower for w in ["код", "code", "программ", "напиши"]):
-        return "💻 Для генерации кода используйте:\n/code <язык> <описание>"
-    if any(w in prompt_lower for w in ["помощь", "help", "что умеешь"]):
-        return HELP_TEXT
-    if any(w in prompt_lower for w in ["перевод", "translate", "переведи"]):
-        return "🌐 Для перевода используйте:\n/translate <текст>"
-    return f"🤖 Вы спросили: *{prompt}*\n\nДля AI ответа добавьте OPENROUTER_API_KEY в настройках."
+    """Generate fallback response when no API key."""
+    lower = prompt.lower()
+    if "help" in lower or "помощ" in lower:
+        return "Я Nexus AI. Для полных возможностей нужен API ключ OpenRouter. В настройках дашборда можно добавить ключ."
+    if "code" in lower or "код" in lower or "python" in lower:
+        return '```python\nprint("Hello, Nexus AI!")\n```'
+    return "Я работаю в демо-режиме. Добавьте OPENROUTER_API_KEY в переменные окружения Railway для полных возможностей."
 
 
-def generate_fallback_code(language: str) -> str:
-    """Fallback code generation."""
-    examples = {
-        "python": '```python\ndef hello():\n    print("Hello from Nexus AI!")\n\nhello()\n```',
-        "javascript": '```javascript\nfunction hello() {\n  console.log("Hello from Nexus AI!");\n}\nhello();\n```',
-        "java": '```java\npublic class Hello {\n    public static void main(String[] args) {\n        System.out.println("Hello from Nexus AI!");\n    }\n}\n```',
-        "rust": '```rust\nfn main() {\n    println!("Hello from Nexus AI!");\n}\n```',
-        "kotlin": '```kotlin\nfun main() {\n    println("Hello from Nexus AI!")\n}\n```',
-        "go": '```go\npackage main\nimport "fmt"\nfunc main() {\n    fmt.Println("Hello from Nexus AI!")\n}\n```',
-    }
-    for key, code in examples.items():
-        if key in language.lower():
-            return f"💻 {key.title()}:\n{code}"
-    return f'```\n# {language}\nprint("Hello from Nexus AI!")\n```'
-
+# ── Command Handlers ──
 
 async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not is_allowed(update.effective_user.id):
-        await update.message.reply_text("❌ Доступ запрещён")
+        await update.message.reply_text("⛔ Доступ запрещён.")
         return
-    update_stats(update.effective_user.id, "start")
-    user = update.effective_user
-    await update.message.reply_text(
-        f"👋 Привет, {user.first_name or 'пользователь'}!\n\n"
-        f"Я Nexus AI — многофункциональный AI ассистент.\n"
-        f"Модель: *{LLM_MODELS.get(LLM_MODEL, LLM_MODEL)}*\n\n"
-        f"Выберите действие:",
-        reply_markup=MAIN_KEYBOARD,
-        parse_mode="Markdown",
-    )
+    await update.message.reply_text(HELP_TEXT, parse_mode="Markdown", reply_markup=MAIN_KEYBOARD)
 
 
 async def cmd_help(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not is_allowed(update.effective_user.id):
-        await update.message.reply_text("❌ Доступ запрещён")
+        await update.message.reply_text("⛔ Доступ запрещён.")
         return
     await update.message.reply_text(HELP_TEXT, parse_mode="Markdown")
 
 
 async def cmd_ask(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not is_allowed(update.effective_user.id):
-        await update.message.reply_text("❌ Доступ запрещён")
+        await update.message.reply_text("⛔ Доступ запрещён.")
         return
-    query = " ".join(context.args) if context.args else None
-    if not query:
-        await update.message.reply_text("Использование: /ask <ваш вопрос>\nНапример: /ask Что такое нейросеть?")
-        return
-    update_stats(update.effective_user.id, "ask")
-    sent_msg = await update.message.reply_text("🤔 Думаю...")
-    response = await query_llm(query)
-    # Split long messages
-    if len(response) > 4000:
-        chunks = [response[i:i+4000] for i in range(0, len(response), 4000)]
-        for chunk in chunks:
-            await update.message.reply_text(chunk, parse_mode="Markdown")
-        await sent_msg.delete()
+    user_id = update.effective_user.id
+    update_stats(user_id, "ask")
+    
+    # If args provided, use them as question
+    if context.args:
+        text = " ".join(context.args)
     else:
-        await sent_msg.edit_text(response, parse_mode="Markdown")
+        # Set waiting state
+        user_sessions[user_id] = user_sessions.get(user_id, {})
+        user_sessions[user_id]['waiting_for'] = 'ask'
+        await update.message.reply_text("💬 Напишите ваш вопрос, и я отвечу:")
+        return
+    
+    thinking_msg = await update.message.reply_text("🤔 Думаю...")
+    
+    system_prompt = "You are NEXUS AI — a powerful AI assistant. Answer concisely and helpfully. Use the language the user writes in."
+    reply = await query_llm(text, system_prompt=system_prompt)
+    
+    try:
+        await thinking_msg.delete()
+    except:
+        pass
+    
+    await update.message.reply_text(
+        reply,
+        parse_mode='Markdown',
+        reply_markup=InlineKeyboardMarkup([[
+            InlineKeyboardButton("🔄 Ещё вопрос", callback_data="ask"),
+            InlineKeyboardButton("🌍 Дашборд", url=WEB_DASHBOARD_URL),
+        ]])
+    )
 
 
 async def cmd_translate(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not is_allowed(update.effective_user.id):
-        await update.message.reply_text("❌ Доступ запрещён")
+        await update.message.reply_text("⛔ Доступ запрещён.")
         return
-    text = " ".join(context.args) if context.args else None
-    if not text:
-        await update.message.reply_text("Использование: /translate <текст>")
+    user_id = update.effective_user.id
+    update_stats(user_id, "translate")
+    
+    if context.args:
+        text = " ".join(context.args)
+    else:
+        user_sessions[user_id] = user_sessions.get(user_id, {})
+        user_sessions[user_id]['waiting_for'] = 'translate'
+        await update.message.reply_text("🌐 Напишите текст для перевода:")
         return
-    update_stats(update.effective_user.id, "translate")
-    sent_msg = await update.message.reply_text("🌐 Перевожу...")
-    response = await query_llm(
-        f"Переведи на русский язык. Ответь ТОЛЬКО переводом, без пояснений:\n\n{text}",
-        "Ты переводчик. Отвечай только переводом."
+    
+    thinking_msg = await update.message.reply_text("🤔 Перевожу...")
+    reply = await query_llm(f"Translate to English: {text}", system_prompt="You are a professional translator. Translate the user's text to English. If it's already in English, translate to Russian.")
+    
+    try:
+        await thinking_msg.delete()
+    except:
+        pass
+    
+    await update.message.reply_text(
+        reply,
+        parse_mode='Markdown',
+        reply_markup=InlineKeyboardMarkup([[
+            InlineKeyboardButton("🔄 Перевести ещё", callback_data="translate"),
+            InlineKeyboardButton("🌍 Дашборд", url=WEB_DASHBOARD_URL),
+        ]])
     )
-    await sent_msg.edit_text(f"🌐 *Перевод:*\n\n{response}", parse_mode="Markdown")
 
 
 async def cmd_code(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not is_allowed(update.effective_user.id):
-        await update.message.reply_text("❌ Доступ запрещён")
+        await update.message.reply_text("⛔ Доступ запрещён.")
         return
-    query = " ".join(context.args) if context.args else "hello world"
-    update_stats(update.effective_user.id, "code")
+    user_id = update.effective_user.id
+    update_stats(user_id, "code")
     
-    if not OPENROUTER_API_KEY:
-        await update.message.reply_text(generate_fallback_code(query), parse_mode="Markdown")
-        return
-    
-    sent_msg = await update.message.reply_text("💻 Генерирую код...")
-    response = await query_llm_code(query)
-    if len(response) > 4000:
-        await sent_msg.edit_text("💻 Код готов (отправляю частями):")
-        chunks = [response[i:i+4000] for i in range(0, len(response), 4000)]
-        for chunk in chunks:
-            await update.message.reply_text(chunk, parse_mode="Markdown")
+    if context.args:
+        lang = context.args[0]
+        desc = " ".join(context.args[1:]) if len(context.args) > 1 else ""
     else:
-        await sent_msg.edit_text(response, parse_mode="Markdown")
+        user_sessions[user_id] = user_sessions.get(user_id, {})
+        user_sessions[user_id]['waiting_for'] = 'code'
+        await update.message.reply_text("💻 Формат: /code <язык> <описание>\nНапример: /code python функция сортировки")
+        return
+    
+    thinking_msg = await update.message.reply_text("🤔 Генерирую код...")
+    
+    prompt = f"Write {lang} code for: {desc}. Provide complete working implementation."
+    system_prompt = "You are NEXUS Code Agent — specialized in Android development, Kotlin, Java, and APK analysis. Provide complete working implementations. Format code in markdown code blocks with language tags."
+    reply = await query_llm(prompt, system_prompt=system_prompt)
+    
+    try:
+        await thinking_msg.delete()
+    except:
+        pass
+    
+    await update.message.reply_text(
+        reply,
+        parse_mode='Markdown',
+        reply_markup=InlineKeyboardMarkup([[
+            InlineKeyboardButton("🔄 Ещё код", callback_data="code"),
+            InlineKeyboardButton("🌍 Дашборд", url=WEB_DASHBOARD_URL),
+        ]])
+    )
 
 
 async def cmd_summary(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not is_allowed(update.effective_user.id):
-        await update.message.reply_text("❌ Доступ запрещён")
+        await update.message.reply_text("⛔ Доступ запрещён.")
         return
-    text = " ".join(context.args) if context.args else None
-    if not text:
-        await update.message.reply_text("Использование: /summary <текст для резюмирования>")
-        return
-    update_stats(update.effective_user.id, "summary")
-    sent_msg = await update.message.reply_text("📝 Составляю краткое содержание...")
-    response = await query_llm(f"Сделай краткое содержание (3-5 предложений):\n\n{text}")
-    if len(response) > 4000:
-        await sent_msg.edit_text("📝 *Краткое содержание:*")
-        chunks = [response[i:i+4000] for i in range(0, len(response), 4000)]
-        for chunk in chunks:
-            await update.message.reply_text(chunk, parse_mode="Markdown")
+    user_id = update.effective_user.id
+    update_stats(user_id, "summary")
+    
+    if context.args:
+        text = " ".join(context.args)
     else:
-        await sent_msg.edit_text(f"📝 *Краткое содержание:*\n\n{response}", parse_mode="Markdown")
+        user_sessions[user_id] = user_sessions.get(user_id, {})
+        user_sessions[user_id]['waiting_for'] = 'summary'
+        await update.message.reply_text("📝 Напишите текст для краткого содержания:")
+        return
+    
+    thinking_msg = await update.message.reply_text("🤔 Делаю краткое содержание...")
+    reply = await query_llm(f"Summarize this text briefly in the same language:\n\n{text}", system_prompt="You are an expert summarizer. Provide concise summaries.")
+    
+    try:
+        await thinking_msg.delete()
+    except:
+        pass
+    
+    await update.message.reply_text(
+        reply,
+        parse_mode='Markdown',
+        reply_markup=InlineKeyboardMarkup([[
+            InlineKeyboardButton("🔄 Ещё", callback_data="summary"),
+            InlineKeyboardButton("🌍 Дашборд", url=WEB_DASHBOARD_URL),
+        ]])
+    )
 
 
 async def cmd_stats(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not is_allowed(update.effective_user.id):
-        await update.message.reply_text("❌ Доступ запрещён")
+        await update.message.reply_text("⛔ Доступ запрещён.")
         return
-    uid = update.effective_user.id
-    stats = user_sessions.get(uid, {"messages": 0, "actions": {}})
-    actions = "\n".join(f"  • {k}: {v}" for k, v in stats.get("actions", {}).items())
-    user_model = stats.get("model", LLM_MODEL)
-    text = (
-        f"📊 *Статистика*\n\n"
-        f"Всего сообщений: {stats.get('messages', 0)}\n"
-        f"Модель: {LLM_MODELS.get(user_model, user_model)}\n"
-        f"Действия:\n{actions or '  Нет'}"
-    )
-    await update.message.reply_text(text, parse_mode="Markdown")
+    user_id = update.effective_user.id
+    session = user_sessions.get(user_id, {})
+    msg = session.get('messages', 0)
+    actions = session.get('actions', {})
+    model = session.get('model', LLM_MODEL)
+    
+    stats_text = f"""📊 **Статистика**
+    
+Сообщений: {msg}
+Модель: {LLM_MODELS.get(model, model)}
+Действия:
+"""
+    for k, v in actions.items():
+        stats_text += f"  • {k}: {v}\n"
+    
+    await update.message.reply_text(stats_text, parse_mode="Markdown")
 
 
 async def cmd_settings(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not is_allowed(update.effective_user.id):
-        await update.message.reply_text("❌ Доступ запрещён")
+        await update.message.reply_text("⛔ Доступ запрещён.")
         return
-    kb = InlineKeyboardMarkup([
-        [InlineKeyboardButton("🌐 Язык: Русский", callback_data="lang_ru"),
-         InlineKeyboardButton("🇬🇧 English", callback_data="lang_en")],
-        [InlineKeyboardButton("« Назад", callback_data="back_to_main")],
-    ])
-    await update.message.reply_text("⚙️ *Настройки*\n\nВыберите язык:", reply_markup=kb, parse_mode="Markdown")
+    await update.message.reply_text(
+        "⚙️ Настройки доступны в веб-дашборде:",
+        reply_markup=InlineKeyboardMarkup([[
+            InlineKeyboardButton("🌍 Открыть настройки", url=f"{WEB_DASHBOARD_URL}?tab=settings"),
+        ]])
+    )
 
 
 async def cmd_model(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not is_allowed(update.effective_user.id):
-        await update.message.reply_text("❌ Доступ запрещён")
+        await update.message.reply_text("⛔ Доступ запрещён.")
         return
+    user_id = update.effective_user.id
+    session = user_sessions.get(user_id, {})
+    current = session.get('model', LLM_MODEL)
+    
     buttons = []
-    row = []
-    for i, (model_id, model_name) in enumerate(LLM_MODELS.items()):
-        prefix = "●" if model_id == LLM_MODEL else "○"
-        row.append(InlineKeyboardButton(f"{prefix} {model_name}", callback_data=f"model_{model_id}"))
-        if len(row) == 2 or i == len(LLM_MODELS) - 1:
-            buttons.append(row)
-            row = []
-    if row:
-        buttons.append(row)
-    buttons.append([InlineKeyboardButton("« Назад", callback_data="back_to_main")])
-    kb = InlineKeyboardMarkup(buttons)
+    for model_id, model_name in LLM_MODELS.items():
+        prefix = "✅ " if model_id == current else ""
+        buttons.append([InlineKeyboardButton(f"{prefix}{model_name}", callback_data=f"model_{model_id}")])
+    
+    buttons.append([InlineKeyboardButton("🌍 Дашборд", url=WEB_DASHBOARD_URL)])
+    
     await update.message.reply_text(
-        f"🤖 *Выбор модели LLM*\n\n"
-        f"Текущая: *{LLM_MODELS.get(LLM_MODEL, LLM_MODEL)}*\n\n"
-        f"Выберите модель:",
-        reply_markup=kb,
-        parse_mode="Markdown",
+        f"🤖 Текущая модель: {LLM_MODELS.get(current, current)}\nВыберите новую:",
+        reply_markup=InlineKeyboardMarkup(buttons)
     )
 
 
 async def cmd_dashboard(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not is_allowed(update.effective_user.id):
-        await update.message.reply_text("❌ Доступ запрещён")
+        await update.message.reply_text("⛔ Доступ запрещён.")
         return
     await update.message.reply_text(
-        f"🌍 *Веб-дашборд:*\n{WEB_DASHBOARD_URL}",
-        reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🌍 Открыть дашборд", url=WEB_DASHBOARD_URL)]]),
-        parse_mode="Markdown",
+        "🌍 Веб-дашборд:",
+        reply_markup=InlineKeyboardMarkup([[
+            InlineKeyboardButton("Открыть", url=WEB_DASHBOARD_URL),
+            InlineKeyboardButton("Mini App", web_app=WebAppInfo(url=WEB_DASHBOARD_URL)),
+        ]])
     )
 
 
 async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
-    if not is_allowed(query.from_user.id):
-        await query.answer("❌ Доступ запрещён", show_alert=True)
-        return
     await query.answer()
+    
+    user_id = query.from_user.id
+    if not is_allowed(user_id):
+        await query.edit_message_text("⛔ Доступ запрещён.")
+        return
+    
     data = query.data
-
-    if data == "ask":
-        await query.edit_message_text("🤖 Задайте вопрос, отправив:\n/ask <ваш вопрос>")
-    elif data == "code":
-        await query.edit_message_text("💻 Генерация кода:\n/code <язык> <описание>\n/code python сортировка пузырьком")
-    elif data == "translate":
-        await query.edit_message_text("🌐 Перевод:\n/translate <текст для перевода>")
-    elif data == "summary":
-        await query.edit_message_text("📝 Резюмирование:\n/summary <длинный текст>")
-    elif data == "stats":
-        uid = query.from_user.id
-        stats = user_sessions.get(uid, {"messages": 0, "actions": {}, "model": LLM_MODEL})
-        actions = "\n".join(f"  • {k}: {v}" for k, v in stats.get("actions", {}).items())
-        model_name = LLM_MODELS.get(stats.get("model", LLM_MODEL), LLM_MODEL)
-        text = f"📊 *Статистика*\nСообщений: {stats.get('messages', 0)}\nМодель: {model_name}\n{actions or ''}"
-        await query.edit_message_text(text, parse_mode="Markdown")
-    elif data == "settings":
-        kb = InlineKeyboardMarkup([
-            [InlineKeyboardButton("🌐 Русский", callback_data="lang_ru"),
-             InlineKeyboardButton("🇬🇧 English", callback_data="lang_en")],
-            [InlineKeyboardButton("« Назад", callback_data="back_to_main")],
-        ])
-        await query.edit_message_text("⚙️ *Настройки:*", reply_markup=kb, parse_mode="Markdown")
-    elif data == "model":
-        await cmd_model(update, context)
-    elif data.startswith("model_"):
-        model_id = data.replace("model_", "")
-        if model_id in LLM_MODELS:
-            uid = query.from_user.id
-            if uid not in user_sessions:
-                user_sessions[uid] = {"messages": 0, "actions": {}, "model": model_id}
-            else:
-                user_sessions[uid]["model"] = model_id
-            await query.edit_message_text(
-                f"✅ Модель изменена на *{LLM_MODELS[model_id]}*\n\n"
-                f"Новая модель будет использоваться для всех запросов.",
-                parse_mode="Markdown",
-            )
-        else:
-            await query.edit_message_text("❌ Модель не найдена")
-    elif data == "back_to_main":
+    
+    if data.startswith("model_"):
+        model_id = data[6:]
+        user_sessions[user_id] = user_sessions.get(user_id, {})
+        user_sessions[user_id]['model'] = model_id
+        # Update global model for this session
+        global LLM_MODEL
+        LLM_MODEL = model_id
         await query.edit_message_text(
-            f"Выберите действие:\nМодель: *{LLM_MODELS.get(LLM_MODEL, LLM_MODEL)}*",
-            reply_markup=MAIN_KEYBOARD,
-            parse_mode="Markdown",
+            f"✅ Модель изменена на: {LLM_MODELS.get(model_id, model_id)}",
+            reply_markup=InlineKeyboardMarkup([[
+                InlineKeyboardButton("🌍 Дашборд", url=WEB_DASHBOARD_URL),
+            ]])
         )
-    elif data.startswith("lang_"):
-        lang = "🇬🇧 English" if data == "lang_en" else "🌐 Русский"
-        await query.edit_message_text(f"✅ Язык изменён на {lang}\n\n(Функционал перевода интерфейса в разработке)", reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("« Назад", callback_data="settings")]]))
+        return
+    
+    # Handle other callbacks
+    if data == "ask":
+        user_sessions[user_id] = user_sessions.get(user_id, {})
+        user_sessions[user_id]['waiting_for'] = 'ask'
+        await query.edit_message_text("💬 Напишите ваш вопрос:")
+    elif data == "translate":
+        user_sessions[user_id] = user_sessions.get(user_id, {})
+        user_sessions[user_id]['waiting_for'] = 'translate'
+        await query.edit_message_text("🌐 Напишите текст для перевода:")
+    elif data == "code":
+        await query.edit_message_text("💻 Формат: /code <язык> <описание>\nНапример: /code python функция сортировки")
+    elif data == "summary":
+        user_sessions[user_id] = user_sessions.get(user_id, {})
+        user_sessions[user_id]['waiting_for'] = 'summary'
+        await query.edit_message_text("📝 Напишите текст для краткого содержания:")
+    elif data == "stats":
+        session = user_sessions.get(user_id, {})
+        msg = session.get('messages', 0)
+        actions = session.get('actions', {})
+        stats = f"📊 Статистика:\nСообщений: {msg}\n"
+        for k, v in actions.items():
+            stats += f"  • {k}: {v}\n"
+        await query.edit_message_text(stats)
+    elif data == "settings":
+        await query.edit_message_text(
+            "⚙️ Настройки в веб-дашборде:",
+            reply_markup=InlineKeyboardMarkup([[
+                InlineKeyboardButton("Открыть", url=f"{WEB_DASHBOARD_URL}?tab=settings"),
+            ]])
+        )
 
 
+# ── Main Message Handler ──
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not is_allowed(update.effective_user.id):
+        await update.message.reply_text("⛔ Доступ запрещён.")
         return
-    update_stats(update.effective_user.id, "message")
+
+    user_id = update.effective_user.id
+    text = update.message.text.strip()
+    update_stats(user_id, "message")
+
+    # If user is waiting for input for a command
+    session = user_sessions.get(user_id, {})
+    waiting_for = session.get('waiting_for')
+    
+    if waiting_for:
+        user_sessions[user_id]['waiting_for'] = None
+        
+        thinking_msg = await update.message.reply_text("🤔 Думаю...")
+        
+        system_prompt = "You are NEXUS AI — a powerful AI assistant. Answer concisely and helpfully. Use the language the user writes in."
+        
+        if waiting_for == 'ask':
+            reply = await query_llm(text, system_prompt=system_prompt)
+        elif waiting_for == 'translate':
+            reply = await query_llm(f"Translate to English: {text}", system_prompt="You are a professional translator. Translate the user's text to English. If it's already in English, translate to Russian.")
+        elif waiting_for == 'code':
+            # For code, user would use /code command
+            reply = await query_llm(f"Write Python code for: {text}", system_prompt="You are NEXUS Code Agent — specialized in Android development, Kotlin, Java, and APK analysis. Provide complete working implementations.")
+        elif waiting_for == 'summary':
+            reply = await query_llm(f"Summarize this text briefly in the same language:\n\n{text}", system_prompt="You are an expert summarizer. Provide concise summaries.")
+        else:
+            reply = await query_llm(text, system_prompt=system_prompt)
+        
+        try:
+            await thinking_msg.delete()
+        except:
+            pass
+        
+        await update.message.reply_text(
+            reply,
+            parse_mode='Markdown',
+            reply_markup=InlineKeyboardMarkup([[
+                InlineKeyboardButton("🔄 Ещё", callback_data=waiting_for),
+                InlineKeyboardButton("🌍 Дашборд", url=WEB_DASHBOARD_URL),
+            ]])
+        )
+        return
+
+    # Regular message - treat as AI question
+    thinking_msg = await update.message.reply_text("🤔 Думаю...")
+    
+    system_prompt = "You are NEXUS AI — a powerful AI assistant. Answer concisely and helpfully. Use the language the user writes in."
+    reply = await query_llm(text, system_prompt=system_prompt)
+    
+    try:
+        await thinking_msg.delete()
+    except:
+        pass
+    
     await update.message.reply_text(
-        "🤖 Используйте команды или кнопки ниже:",
-        reply_markup=MAIN_KEYBOARD
+        reply,
+        parse_mode='Markdown',
+        reply_markup=InlineKeyboardMarkup([[
+            InlineKeyboardButton("🔄 Ещё вопрос", callback_data="ask"),
+            InlineKeyboardButton("🌍 Дашборд", url=WEB_DASHBOARD_URL),
+        ]])
     )
 
 

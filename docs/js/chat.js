@@ -573,3 +573,6 @@ function loadSettings() {
     return JSON.parse(localStorage.getItem('nexus_settings') || '{}');
   } catch { return {}; }
 }
+
+// Expose initModelSelector globally
+window.initModelSelector = initModelSelector;

@@ -6,17 +6,10 @@ import os
 import sys
 import json
 import logging
-import multiprocessing
+import threading
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 from urllib.parse import urlparse
 from pathlib import Path
-
-# CRITICAL: Use 'spawn' to avoid inheriting parent's event loop
-# This is required for python-telegram-bot signal handlers to work
-try:
-    multiprocessing.set_start_method('spawn', force=True)
-except RuntimeError:
-    pass
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger(__name__)
@@ -150,7 +143,7 @@ def run_dashboard():
 
 
 def run_bot():
-    """Start the Telegram bot in this process (spawned fresh)."""
+    """Start the Telegram bot in a background thread with its own asyncio event loop."""
     bot_path = os.path.join(os.path.dirname(__file__), "bot", "bot.py")
     if not os.path.exists(bot_path):
         logger.warning(f"Bot file not found: {bot_path}")
@@ -162,17 +155,17 @@ def run_bot():
 
     try:
         import importlib.util
-        spec = importlib.util.spec_from_file_location("bot", bot_path)
+        spec = importlib.util.spec_from_file_location("nexus_bot", bot_path)
         bot_module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(bot_module)
-        
-        # Call the bot's run() function - run_polling manages its own event loop
-        if hasattr(bot_module, 'run'):
-            bot_module.run()
-        else:
-            logger.error("Bot module has no run() function")
+
+        # Each thread needs its own event loop (multiprocessing caused asyncio conflicts)
+        import asyncio
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        bot_module.main()
     except Exception as e:
-        logger.error(f"Bot process error: {e}", exc_info=True)
+        logger.error(f"Bot thread error: {e}", exc_info=True)
 
 
 if __name__ == "__main__":
@@ -183,17 +176,13 @@ if __name__ == "__main__":
         logger.warning(f"Dashboard directory not found: {DASHBOARD_DIR}")
         os.makedirs(DASHBOARD_DIR, exist_ok=True)
     
-    # Start bot in separate process (spawn ensures clean event loop for signal handlers)
-    bot_process = multiprocessing.Process(target=run_bot, name="TelegramBot", daemon=True)
-    bot_process.start()
-    logger.info("Telegram bot process started")
-    
-    # Run dashboard in main process
+    # Start bot in background thread (threading avoids asyncio event loop conflicts)
+    bot_thread = threading.Thread(target=run_bot, name="NexusTelegramBot", daemon=True)
+    bot_thread.start()
+    logger.info("Telegram bot thread started")
+
+    # Run dashboard HTTP server in main thread
     try:
         run_dashboard()
     except KeyboardInterrupt:
         logger.info("Shutting down...")
-    finally:
-        if bot_process.is_alive():
-            bot_process.terminate()
-            bot_process.join(timeout=5)

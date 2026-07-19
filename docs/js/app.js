@@ -115,6 +115,15 @@ document.addEventListener('DOMContentLoaded', () => {
   try { startSessionTimer(); } catch(e) { console.error('[Nexus] startSessionTimer:', e); }
   
   console.log('[Nexus] init complete');
+  
+  // Debug: check sidebar state
+  var sidebar = document.getElementById('sidebar');
+  var menuToggle = document.getElementById('menuToggle') || document.querySelector('.topbar-menu');
+  console.log('[Nexus] sidebar:', sidebar ? 'found' : 'missing', 'menuToggle:', menuToggle ? 'found' : 'missing');
+  if (sidebar) {
+    console.log('[Nexus] sidebar display:', window.getComputedStyle(sidebar).display);
+    console.log('[Nexus] sidebar transform:', window.getComputedStyle(sidebar).transform);
+  }
 });
 
 // ── Tab Navigation ─────────────────────────────────────────
@@ -171,27 +180,28 @@ function switchTab(tab) {
 
 // ── Sidebar ────────────────────────────────────────────────
 function initSidebar() {
-  const sidebar  = document.getElementById('sidebar');
-  const overlay  = document.getElementById('overlay');
-  const menuBtn  = document.getElementById('menuToggle');
-  const closeBtn = document.getElementById('sidebarClose');
+  var sidebar  = document.getElementById('sidebar');
+  var overlay  = document.getElementById('overlay');
+  var menuBtn  = document.getElementById('menuToggle');
+  var closeBtn = document.getElementById('sidebarClose');
 
   if (!sidebar) {
     console.error('[Nexus] sidebar element not found!');
     return;
   }
 
-  // Check if desktop (width > 768px)
-  const isDesktop = () => window.innerWidth > 768;
+  var isDesktop = function() { return window.innerWidth > 768; };
 
   function openSidebar() {
     sidebar.classList.add('open');
     if (overlay && !isDesktop()) {
       overlay.style.display = 'block';
-      // Double rAF guarantees browser applied display:block before transition
-      requestAnimationFrame(() => requestAnimationFrame(() => {
-        overlay.style.opacity = '1';
-      }));
+      // Double rAF ensures display:block is painted before opacity transition
+      requestAnimationFrame(function() {
+        requestAnimationFrame(function() {
+          overlay.style.opacity = '1';
+        });
+      });
     }
   }
 
@@ -199,41 +209,52 @@ function initSidebar() {
     sidebar.classList.remove('open');
     if (overlay) {
       overlay.style.opacity = '0';
-      setTimeout(() => { overlay.style.display = 'none'; }, 280);
+      setTimeout(function() {
+        if (!sidebar.classList.contains('open')) {
+          overlay.style.display = 'none';
+        }
+      }, 280);
     }
   }
 
-  // On desktop, sidebar is always open
+  // Desktop: always open on start
   if (isDesktop()) {
     sidebar.classList.add('open');
+    if (overlay) overlay.style.display = 'none';
   }
 
-  menuBtn?.addEventListener('click', () => {
-    if (sidebar.classList.contains('open') && !isDesktop()) {
-      closeSidebar();
-    } else {
-      openSidebar();
-    }
-  });
+  // Menu toggle: on desktop toggles sidebar, on mobile opens
+  if (menuBtn) {
+    menuBtn.addEventListener('click', function() {
+      if (sidebar.classList.contains('open') && !isDesktop()) {
+        closeSidebar();
+      } else if (!sidebar.classList.contains('open')) {
+        openSidebar();
+      } else if (isDesktop()) {
+        // On desktop, toggle sidebar visibility
+        sidebar.classList.remove('open');
+      }
+    });
+  }
 
-  closeBtn?.addEventListener('click', closeSidebar);
-  overlay?.addEventListener('click', closeSidebar);
+  if (closeBtn) closeBtn.addEventListener('click', closeSidebar);
+  if (overlay)  overlay.addEventListener('click', closeSidebar);
 
-  document.addEventListener('keydown', e => {
+  document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape' && !isDesktop()) closeSidebar();
   });
 
-  // Recalculate on window resize
-  window.addEventListener('resize', () => {
+  // On resize: keep sidebar open on desktop, close on mobile
+  window.addEventListener('resize', function() {
     if (isDesktop()) {
       sidebar.classList.add('open');
-      if (overlay) overlay.style.display = 'none';
+      if (overlay) { overlay.style.opacity = '0'; overlay.style.display = 'none'; }
     }
   });
 
-  // Expose globally for inline handlers
   window.openSidebar  = openSidebar;
   window.closeSidebar = closeSidebar;
+
   console.log('[Nexus] sidebar initialized, desktop:', isDesktop());
 }
 

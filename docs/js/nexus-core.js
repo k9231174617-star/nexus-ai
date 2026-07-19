@@ -31,7 +31,11 @@ const NexusCore = {
     // ─── Sidebar Items ──────────────────────────────────────
     registerSidebarItems() {
         const pm = window.NexusPlugins;
-        if (!pm) return;
+        if (!pm) {
+            console.warn('[NexusCore] NexusPlugins not ready, retrying in 500ms...');
+            setTimeout(() => this.registerSidebarItems(), 500);
+            return;
+        }
 
         const items = [
             { id: 'nexus-llm', icon: '🧠', label: 'On-Device LLM', section: 'ai', priority: 10, onClick: () => this.showLLMPanel() },
@@ -140,7 +144,7 @@ const NexusCore = {
     },
 
     llmQuery(prompt) {
-        document.getElementById('llmPrompt')?.value = prompt;
+        var llmPromptEl = document.getElementById('llmPrompt'); if (llmPromptEl) llmPromptEl.value = prompt;
         this.llmSend();
     },
 

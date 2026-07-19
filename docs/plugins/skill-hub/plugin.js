@@ -259,7 +259,7 @@
     }
 
     function getMainPanel() {
-        return document.querySelector('.tab-content.active') || document.querySelector('main > *:last-child') || document.querySelector('.app-content');
+        return document.querySelector('.tab-panel.active') || document.querySelector('main > *:last-child') || document.querySelector('.app-content');
     }
 })();
 
@@ -271,7 +271,7 @@ window.renderSkillHub = () => {
 
 window.renderCategoryView = (cat) => {
     const sr = window.SkillRegistry;
-    const main = document.querySelector('.tab-content.active');
+    const main = document.querySelector('.tab-panel.active');
     if (!main || !sr) return;
 
     const skills = sr.getByCategory(cat);

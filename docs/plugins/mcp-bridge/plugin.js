@@ -28,7 +28,7 @@
     }]);
 
     function showMCPServerList() {
-        const main = document.querySelector('.tab-content.active');
+        const main = document.querySelector('.tab-panel.active');
         if (!main) return;
         main.innerHTML = `
             <div style="padding:20px">

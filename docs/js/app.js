@@ -148,6 +148,60 @@ function initSession() {
   console.log('[Nexus] initSession (no-op)');
 }
 
+
+// ── Topbar Actions ─────────────────────────────────────────
+function initTopbarActions() {
+  // Clear chat button
+  var clearBtn = document.getElementById('clearChat');
+  if (clearBtn) {
+    clearBtn.addEventListener('click', function() {
+      var chatMessages = document.getElementById('chatMessages');
+      if (chatMessages) {
+        var firstMsg = chatMessages.querySelector('.message');
+        chatMessages.innerHTML = '';
+        if (firstMsg) chatMessages.appendChild(firstMsg);
+      }
+      if (typeof histories !== 'undefined') {
+        histories.main = [];
+      }
+      if (window.AppState) {
+        AppState.messageCount = 0;
+        AppState.totalTokens = 0;
+      }
+      var mc = document.getElementById('msgCount');
+      if (mc) mc.textContent = '0';
+      var tc = document.getElementById('tokenCount');
+      if (tc) tc.textContent = '0';
+      if (typeof showToast === 'function') showToast('Чат очищен');
+    });
+  }
+
+  // Export chat button
+  var exportBtn = document.getElementById('exportChat');
+  if (exportBtn) {
+    exportBtn.addEventListener('click', function() {
+      var chatMessages = document.getElementById('chatMessages');
+      if (!chatMessages) return;
+      var messages = chatMessages.querySelectorAll('.message');
+      var text = 'NEXUS AI Chat Export\n' + '='.repeat(40) + '\n\n';
+      messages.forEach(function(msg) {
+        var name = msg.querySelector('.msg-name');
+        var msgText = msg.querySelector('.msg-text');
+        if (name && msgText) {
+          text += '[' + name.textContent + ']\n' + msgText.textContent.trim() + '\n\n';
+        }
+      });
+      var blob = new Blob([text], { type: 'text/plain' });
+      var a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'nexus-chat-' + new Date().toISOString().slice(0,10) + '.txt';
+      a.click();
+      URL.revokeObjectURL(a.href);
+      if (typeof showToast === 'function') showToast('Чат экспортирован');
+    });
+  }
+}
+
 // ── Init ───────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
   console.log('[Nexus] init started');
@@ -158,9 +212,39 @@ document.addEventListener('DOMContentLoaded', () => {
   try { initSession(); } catch(e) { console.error('[Nexus] initSession:', e); }
   try { populateFiles(); } catch(e) { console.error('[Nexus] populateFiles:', e); }
   try { startSessionTimer(); } catch(e) { console.error('[Nexus] startSessionTimer:', e); }
+  try { initTopbarActions(); } catch(e) { console.error("[Nexus] initTopbarActions:", e); }
   try { initAttachButton(); } catch(e) { console.error('[Nexus] initAttachButton:', e); }
   
   console.log('[Nexus] init complete');
+  // Auto-remove stray terminal/timestamp elements from chat area
+  try {
+    var mainTab = document.getElementById('tab-main');
+    if (mainTab) {
+      var observer = new MutationObserver(function(mutations) {
+        mutations.forEach(function(m) {
+          m.addedNodes.forEach(function(node) {
+            if (node.nodeType === 1) {
+              if (node.classList && (
+                node.classList.contains('terminal') ||
+                node.classList.contains('terminal-line') ||
+                node.classList.contains('cli-container')
+              )) {
+                node.remove();
+              }
+              // Check children too
+              if (node.querySelectorAll) {
+                node.querySelectorAll('.terminal, .terminal-line, .cli-container').forEach(function(el) {
+                  el.remove();
+                });
+              }
+            }
+          });
+        });
+      });
+      observer.observe(mainTab, { childList: true, subtree: true });
+    }
+  } catch(e) { console.warn('[Nexus] MutationObserver:', e); }
+
   
   // Debug: check sidebar state
   var sidebar = document.getElementById('sidebar');

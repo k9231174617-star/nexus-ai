@@ -57,6 +57,7 @@ body {
   background: var(--bg-deep);
   color: var(--text-primary);
   min-height: 100vh;
+  overflow: hidden;
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
 }
@@ -81,6 +82,7 @@ body {
 .app-shell {
   display: flex;
   min-height: 100vh;
+  overflow: hidden;
   position: relative;
   z-index: 1;
 }
@@ -310,6 +312,7 @@ body {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  overflow: hidden;
   position: relative;
 }
 
@@ -385,12 +388,14 @@ body {
 
 /* ── Tab Panels ── */
 .tab-panel {
+  overflow: hidden;
+  position: relative;
   display: none;
   flex: 1;
   flex-direction: column;
 }
 
-.tab-panel.active { display: flex; }
+.tab-panel.active { display: flex; overflow: visible; }
 
 /* ── Stats Row ── */
 .stats-row {

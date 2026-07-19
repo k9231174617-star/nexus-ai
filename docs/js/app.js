@@ -156,7 +156,6 @@ document.addEventListener('DOMContentLoaded', () => {
   try { initNav(); } catch(e) { console.error('[Nexus] initNav:', e); }
   try { initSidebar(); } catch(e) { console.error('[Nexus] initSidebar:', e); }
   try { initSession(); } catch(e) { console.error('[Nexus] initSession:', e); }
-  try { initContextBar(); } catch(e) { console.error('[Nexus] initContextBar:', e); }
   try { populateFiles(); } catch(e) { console.error('[Nexus] populateFiles:', e); }
   try { startSessionTimer(); } catch(e) { console.error('[Nexus] startSessionTimer:', e); }
   try { initAttachButton(); } catch(e) { console.error('[Nexus] initAttachButton:', e); }
@@ -319,14 +318,7 @@ function startSessionTimer() {
 }
 
 // ── Context Bar ────────────────────────────────────────────
-function initContextBar() {
-  $qa('.ctx-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      $qa('.ctx-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-    });
-  });
-}
+
 
 // ── Token counter update ───────────────────────────────────
 function updateTokenCount(n) {

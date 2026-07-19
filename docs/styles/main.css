@@ -575,27 +575,7 @@ body {
 .attachment-item svg { color: var(--red-core); }
 
 /* Context Bar */
-.context-bar {
-  display: flex;
-  gap: 6px;
-  padding: 8px 0;
-  flex-wrap: wrap;
-}
 
-.ctx-btn {
-  background: var(--bg-input);
-  border: 1px solid var(--border-subtle);
-  color: var(--text-secondary);
-  font-size: 11px;
-  font-weight: 500;
-  padding: 5px 10px;
-  border-radius: 20px;
-  cursor: pointer;
-  transition: all 0.18s;
-}
-
-.ctx-btn:hover { border-color: var(--border-mid); color: var(--text-primary); }
-.ctx-btn.active { background: var(--red-faint); border-color: var(--red-core); color: var(--red-core); }
 
 /* Input Row */
 .input-row {

@@ -141,7 +141,6 @@ body {
   margin-top: 2px;
 }
 
-.sidebar-close {
   background: rgba(255,10,47,0.1);
   border: 1px solid var(--border-subtle);
   cursor: pointer;
@@ -151,7 +150,6 @@ body {
   display: flex; /* Always visible now */
   transition: all 0.18s;
 }
-.sidebar-close:hover {
   opacity: 1;
   background: rgba(255,10,47,0.2);
   border-color: var(--border-mid);
@@ -1241,7 +1239,6 @@ input[type="file"] { display: none; }
     transform: translateX(0) !important;
     box-shadow: 4px 0 40px rgba(0,0,0,0.8) !important;
   }
-  .sidebar-close { display: flex !important; }
   .topbar-menu { display: flex !important; }
   .main-content { margin-left: 0 !important; }
   .stats-row { grid-template-columns: repeat(2, 1fr); }

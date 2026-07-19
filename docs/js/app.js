@@ -284,7 +284,7 @@ function initSidebar() {
     });
   }
 
-  if (closeBtn) closeBtn.addEventListener('click', closeSidebar);
+  
   if (overlay)  overlay.addEventListener('click', closeSidebar);
 
   document.addEventListener('keydown', function(e) {

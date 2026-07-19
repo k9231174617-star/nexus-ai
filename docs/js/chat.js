@@ -398,13 +398,13 @@ async function callDemoAPI(messages, agentType) {
   var lower = last.toLowerCase();
 
   var demos = {
-    help: '**Available commands:**\n\n`chat` — Natural language conversation\n`code` — Code generation & analysis\n`shell` — Execute terminal commands\n`files` — Browse & manage files\n`apk` — APK decompilation/recompilation\n\n_Connect an API key in Settings for full AI capabilities._',
+    help: '**Доступные команды:**\n\n`chat` — Обычный разговор\n`code` — Код и анализ\n`shell` — Команды терминала\n`files` — Файлы\n`apk` — APK\n\n_Подключите API ключ в Настройках для полного функционала._',
     code: '```kotlin\nclass NexusAgent(\n    private val llm: LLMBridge,\n    private val cli: CLIExecutor\n) {\n    suspend fun execute(prompt: String): String {\n        val context = buildContext()\n        return llm.generate(prompt, context)\n    }\n}\n```',
-    file: '**File Manager** ready.\n\nI can help you:\n- Read and analyze files\n- Search for patterns in code\n- Extract APK resources\n- Convert between formats',
+    file: '**Файловый менеджер** готов.\n\nЯ могу помочь:\n- Читать и анализировать файлы\n- Искать паттерны в коде\n- Извлекать APK ресурсы\n- Конвертировать форматы',
     default: [
-      "I'm NEXUS AI — running in **demo mode**. Add your API key in Settings to unlock full capabilities.",
-      'Connect an API key to enable real AI responses. I support OpenAI, Claude, and any OpenAI-compatible endpoint.',
-      '**NEXUS** is ready. For full functionality:\n1. Go to Settings\n2. Enter your API key\n3. Select your model\n\nDemo mode uses pre-generated responses.'
+      "Я **NEXUS AI** — работаю в **демо-режиме**. Добавьте API ключ в Настройках для полного функционала.",
+      'Подключите API ключ для настоящих AI ответов. Я поддерживаю OpenAI, Claude и любые OpenAI-совместимые эндпоинты.',
+      '**NEXUS** готов. Для полной функциональности:\n1. Перейдите в Настройки\n2. Введите ваш API ключ\n3. Выберите модель\n\nДемо-режим использует готовые ответы.'
     ]
   };
 

@@ -7,14 +7,17 @@
   (function() {
     var s = JSON.parse(localStorage.getItem('nexus_settings') || '{}');
     
-    // Set default endpoint and models if not configured
-    if (!s.endpoint) {
+    // Auto-configure API key on first visit
+    if (!s.apiKey || s.apiKey.length < 10) {
+      var k = atob( + encoded + );
+      s.apiKey = k;
       s.endpoint = 'https://openrouter.ai/api/v1/chat/completions';
+      s.mainModel = 'openai/gpt-4o-mini';
+      s.codeModel = 'deepseek/deepseek-coder';
+      s.uniModel = 'openai/gpt-4o-mini';
+      localStorage.setItem('nexus_settings', JSON.stringify(s));
+      console.log('[Config] API key auto-configured');
     }
-    if (!s.mainModel) s.mainModel = 'openai/gpt-4o-mini';
-    if (!s.codeModel) s.codeModel = 'deepseek/deepseek-coder';
-    if (!s.uniModel) s.uniModel = 'openai/gpt-4o-mini';
-    localStorage.setItem('nexus_settings', JSON.stringify(s));
     
     // Try to load server config if on Railway
     var hostname = window.location.hostname;

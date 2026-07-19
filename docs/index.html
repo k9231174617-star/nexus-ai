@@ -5,24 +5,33 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <script>
   (function() {
-    try {
-      var saved = JSON.parse(localStorage.getItem('nexus_settings') || '{}');
-      if (saved.apiKey && saved.apiKey.length > 10) return;
-    } catch(e) {}
+    var s = JSON.parse(localStorage.getItem('nexus_settings') || '{}');
+    
+    // Set default endpoint and models if not configured
+    if (!s.endpoint) {
+      s.endpoint = 'https://openrouter.ai/api/v1/chat/completions';
+    }
+    if (!s.mainModel) s.mainModel = 'openai/gpt-4o-mini';
+    if (!s.codeModel) s.codeModel = 'deepseek/deepseek-coder';
+    if (!s.uniModel) s.uniModel = 'openai/gpt-4o-mini';
+    localStorage.setItem('nexus_settings', JSON.stringify(s));
+    
+    // Try to load server config if on Railway
     var hostname = window.location.hostname;
     var isServer = hostname === 'localhost' || hostname.includes('railway.app') || window.location.port !== '';
-    if (!isServer) return;
-    fetch('/api/config', { cache: 'no-store' })
-      .then(function(r) { return r.ok ? r.json() : Promise.reject(r.status); })
-      .then(function(cfg) {
-        if (!cfg || !cfg.apiKey) return;
-        var s = JSON.parse(localStorage.getItem('nexus_settings') || '{}');
-        s.apiKey = cfg.apiKey; s.endpoint = cfg.endpoint || 'https://openrouter.ai/api/v1/chat/completions';
-        s.mainModel = cfg.mainModel || 'openai/gpt-4o-mini';
-        localStorage.setItem('nexus_settings', JSON.stringify(s));
-        console.log('[Config] API key loaded from server');
-      })
-      .catch(function(e) { console.log('[Config] No server config:', e); });
+    if (isServer) {
+      fetch('/api/config', { cache: 'no-store' })
+        .then(function(r) { return r.ok ? r.json() : Promise.reject(r.status); })
+        .then(function(cfg) {
+          if (!cfg || !cfg.apiKey) return;
+          s.apiKey = cfg.apiKey;
+          if (cfg.endpoint) s.endpoint = cfg.endpoint;
+          if (cfg.mainModel) s.mainModel = cfg.mainModel;
+          localStorage.setItem('nexus_settings', JSON.stringify(s));
+          console.log('[Config] API key loaded from server');
+        })
+        .catch(function(e) { console.log('[Config] No server config:', e); });
+    }
   })();
 </script>
 
@@ -73,10 +82,10 @@
     }
   </script>
 
-  <!-- App Shell -->
-  <div class="app-shell">
-    <!-- Sidebar Drawer -->
-    <aside class="sidebar" id="sidebar">
+  <!-- Sidebar Drawer (outside app-shell for correct z-index) -->
+  <aside class="sidebar" id="sidebar">
+
+  
       <div class="sidebar-header">
         <div class="logo-wrap">
           <!-- SVG Logo -->
@@ -185,8 +194,8 @@
         </div>
       </div>
     </aside>
-
-    <!-- Main Content Area -->
+  <div class="app-shell">
+<!-- Main Content Area -->
     <main class="main-content" id="mainContent">
       <!-- Top Bar -->
       <header class="topbar">
@@ -714,13 +723,16 @@
 
     </main>
   
-<!-- Overlay for sidebar on mobile (INSIDE app-shell) -->
-  <div class="overlay" id="overlay"></div>
-
   <!-- Toast Notification -->
   <div class="toast" id="toast" aria-live="polite"></div>
 
   </div>
+
+  <!-- Overlay for sidebar on mobile (OUTSIDE app-shell) -->
+
+  </div>
+
+<div class="overlay" id="overlay"></div>
 
   <script src="js/app.js"></script>
   <script src="js/chat.js"></script>

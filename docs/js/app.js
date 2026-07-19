@@ -230,7 +230,6 @@ function initSidebar() {
   var sidebar  = document.getElementById('sidebar');
   var overlay  = document.getElementById('overlay');
   var menuBtn  = document.getElementById('menuToggle');
-  var closeBtn = document.getElementById('sidebarClose');
 
   if (!sidebar) {
     console.error('[Nexus] sidebar element not found!');
@@ -241,14 +240,10 @@ function initSidebar() {
 
   function openSidebar() {
     sidebar.classList.add('open');
+    // On mobile, show overlay behind sidebar
     if (overlay && !isDesktop()) {
       overlay.style.display = 'block';
-      // Double rAF ensures display:block is painted before opacity transition
-      requestAnimationFrame(function() {
-        requestAnimationFrame(function() {
-          overlay.style.opacity = '1';
-        });
-      });
+      overlay.style.opacity = '1';
     }
   }
 
@@ -264,38 +259,45 @@ function initSidebar() {
     }
   }
 
-  // Desktop: always open on start
+  // Desktop: sidebar always visible (no .open class needed since no transform)
   if (isDesktop()) {
     sidebar.classList.add('open');
-    if (overlay) overlay.style.display = 'none';
+    if (overlay) { overlay.style.display = 'none'; overlay.style.opacity = '0'; }
   }
 
-  // Menu toggle: on desktop toggles sidebar, on mobile opens
+  // Menu toggle
   if (menuBtn) {
-    menuBtn.addEventListener('click', function() {
-      if (sidebar.classList.contains('open') && !isDesktop()) {
-        closeSidebar();
-      } else if (!sidebar.classList.contains('open')) {
-        openSidebar();
-      } else if (isDesktop()) {
-        // On desktop, toggle sidebar visibility
-        sidebar.classList.remove('open');
+    menuBtn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      if (!isDesktop()) {
+        if (sidebar.classList.contains('open')) {
+          closeSidebar();
+        } else {
+          openSidebar();
+        }
       }
     });
   }
 
-  
-  if (overlay)  overlay.addEventListener('click', closeSidebar);
+  // Overlay click closes sidebar
+  if (overlay) {
+    overlay.addEventListener('click', closeSidebar);
+  }
 
+  // Escape key closes sidebar on mobile
   document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape' && !isDesktop()) closeSidebar();
   });
 
-  // On resize: keep sidebar open on desktop, close on mobile
+  // On resize: ensure desktop always shows sidebar
   window.addEventListener('resize', function() {
     if (isDesktop()) {
       sidebar.classList.add('open');
-      if (overlay) { overlay.style.opacity = '0'; overlay.style.display = 'none'; }
+      if (overlay) { overlay.style.display = 'none'; overlay.style.opacity = '0'; }
+    } else {
+      // On mobile, hide sidebar and overlay on resize
+      sidebar.classList.remove('open');
+      if (overlay) { overlay.style.display = 'none'; overlay.style.opacity = '0'; }
     }
   });
 

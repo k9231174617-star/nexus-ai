@@ -334,8 +334,8 @@ async function callAPI(messages, agentType) {
     }
   }
   
-  // If no API key or all API calls failed, use demo
-  return callDemoAPI(messages, agentType);
+  // No API key configured
+  throw new Error('NO_API_KEY');
 }
 
 // ── Custom API Call ────────────────────────────────────────
@@ -390,31 +390,6 @@ async function callCustomAPI(messages, agentType, settings) {
   return (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) || 'No response';
 }
 
-// ── Demo Responses ─────────────────────────────────────────
-async function callDemoAPI(messages, agentType) {
-  await new Promise(function(r) { setTimeout(r, 600 + Math.random() * 800); });
-
-  var last = messages.length > 0 ? messages[messages.length - 1].content || '' : '';
-  var lower = last.toLowerCase();
-
-  var demos = {
-    help: '**Доступные команды:**\n\n`chat` — Обычный разговор\n`code` — Код и анализ\n`shell` — Команды терминала\n`files` — Файлы\n`apk` — APK\n\n_Подключите API ключ в Настройках для полного функционала._',
-    code: '```kotlin\nclass NexusAgent(\n    private val llm: LLMBridge,\n    private val cli: CLIExecutor\n) {\n    suspend fun execute(prompt: String): String {\n        val context = buildContext()\n        return llm.generate(prompt, context)\n    }\n}\n```',
-    file: '**Файловый менеджер** готов.\n\nЯ могу помочь:\n- Читать и анализировать файлы\n- Искать паттерны в коде\n- Извлекать APK ресурсы\n- Конвертировать форматы',
-    default: [
-      "Я **NEXUS AI** — работаю в **демо-режиме**. Добавьте API ключ в Настройках для полного функционала.",
-      'Подключите API ключ для настоящих AI ответов. Я поддерживаю OpenAI, Claude и любые OpenAI-совместимые эндпоинты.',
-      '**NEXUS** готов. Для полной функциональности:\n1. Перейдите в Настройки\n2. Введите ваш API ключ\n3. Выберите модель\n\nДемо-режим использует готовые ответы.'
-    ]
-  };
-
-  if (lower.indexOf('help') !== -1 || lower.indexOf('команд') !== -1) return demos.help;
-  if (lower.indexOf('код') !== -1 || lower.indexOf('code') !== -1 || lower.indexOf('kotlin') !== -1) return demos.code;
-  if (lower.indexOf('файл') !== -1 || lower.indexOf('file') !== -1) return demos.file;
-
-  var arr = demos.default;
-  return arr[Math.floor(Math.random() * arr.length)];
-}
 
 // ── Model Selector ─────────────────────────────────────────
 var modelSelectorInitialized = false;

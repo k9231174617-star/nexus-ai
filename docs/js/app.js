@@ -97,6 +97,13 @@ const $ = id => document.getElementById(id);
 const $q = sel => document.querySelector(sel);
 const $qa = sel => document.querySelectorAll(sel);
 
+// ── Init Session (placeholder) ─────────────────────────────
+function initSession() {
+  console.log('[Nexus] initSession (no-op)');
+}
+
+// ── Init ───────────────────────────────────────────────────
+
 // ── Attach Button ────────────────────────────────────────
 function initAttachButton() {
   var attachBtn = document.getElementById('attachBtn');
@@ -112,7 +119,6 @@ function initAttachButton() {
     if (!files || files.length === 0) return;
     var file = files[0];
 
-    // Show attachment preview
     var preview = document.getElementById('attachmentPreview');
     var nameEl = document.getElementById('attachName');
     var removeBtn = document.getElementById('removeAttach');
@@ -126,7 +132,6 @@ function initAttachButton() {
       };
     }
 
-    // If image, show thumbnail
     if (file.type.startsWith('image/')) {
       var reader = new FileReader();
       reader.onload = function(e) {
@@ -143,15 +148,8 @@ function initAttachButton() {
   });
 }
 
-// ── Init Session (placeholder) ─────────────────────────────
-function initSession() {
-  console.log('[Nexus] initSession (no-op)');
-}
-
-
 // ── Topbar Actions ─────────────────────────────────────────
 function initTopbarActions() {
-  // Clear chat button
   var clearBtn = document.getElementById('clearChat');
   if (clearBtn) {
     clearBtn.addEventListener('click', function() {
@@ -161,13 +159,8 @@ function initTopbarActions() {
         chatMessages.innerHTML = '';
         if (firstMsg) chatMessages.appendChild(firstMsg);
       }
-      if (typeof histories !== 'undefined') {
-        histories.main = [];
-      }
-      if (window.AppState) {
-        AppState.messageCount = 0;
-        AppState.totalTokens = 0;
-      }
+      if (typeof histories !== 'undefined') histories.main = [];
+      if (window.AppState) { AppState.messageCount = 0; AppState.totalTokens = 0; }
       var mc = document.getElementById('msgCount');
       if (mc) mc.textContent = '0';
       var tc = document.getElementById('tokenCount');
@@ -176,7 +169,6 @@ function initTopbarActions() {
     });
   }
 
-  // Export chat button
   var exportBtn = document.getElementById('exportChat');
   if (exportBtn) {
     exportBtn.addEventListener('click', function() {
@@ -194,15 +186,14 @@ function initTopbarActions() {
       var blob = new Blob([text], { type: 'text/plain' });
       var a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
-      a.download = 'nexus-chat-' + new Date().toISOString().slice(0,10) + '.txt';
+      a.download = 'nexus-chat-export.txt';
       a.click();
-      URL.revokeObjectURL(a.href);
       if (typeof showToast === 'function') showToast('Чат экспортирован');
     });
   }
 }
 
-// ── Init ───────────────────────────────────────────────────
+
 document.addEventListener('DOMContentLoaded', () => {
   console.log('[Nexus] init started');
   document.body.classList.add('app-loaded');
@@ -210,41 +201,13 @@ document.addEventListener('DOMContentLoaded', () => {
   try { initNav(); } catch(e) { console.error('[Nexus] initNav:', e); }
   try { initSidebar(); } catch(e) { console.error('[Nexus] initSidebar:', e); }
   try { initSession(); } catch(e) { console.error('[Nexus] initSession:', e); }
+  try { initContextBar(); } catch(e) { console.error('[Nexus] initContextBar:', e); }
   try { populateFiles(); } catch(e) { console.error('[Nexus] populateFiles:', e); }
-  try { startSessionTimer(); } catch(e) { console.error('[Nexus] startSessionTimer:', e); }
-  try { initTopbarActions(); } catch(e) { console.error("[Nexus] initTopbarActions:", e); }
   try { initAttachButton(); } catch(e) { console.error('[Nexus] initAttachButton:', e); }
+  try { initTopbarActions(); } catch(e) { console.error('[Nexus] initTopbarActions:', e); }
+  try { startSessionTimer(); } catch(e) { console.error('[Nexus] startSessionTimer:', e); }
   
   console.log('[Nexus] init complete');
-  // Auto-remove stray terminal/timestamp elements from chat area
-  try {
-    var mainTab = document.getElementById('tab-main');
-    if (mainTab) {
-      var observer = new MutationObserver(function(mutations) {
-        mutations.forEach(function(m) {
-          m.addedNodes.forEach(function(node) {
-            if (node.nodeType === 1) {
-              if (node.classList && (
-                node.classList.contains('terminal') ||
-                node.classList.contains('terminal-line') ||
-                node.classList.contains('cli-container')
-              )) {
-                node.remove();
-              }
-              // Check children too
-              if (node.querySelectorAll) {
-                node.querySelectorAll('.terminal, .terminal-line, .cli-container').forEach(function(el) {
-                  el.remove();
-                });
-              }
-            }
-          });
-        });
-      });
-      observer.observe(mainTab, { childList: true, subtree: true });
-    }
-  } catch(e) { console.warn('[Nexus] MutationObserver:', e); }
-
   
   // Debug: check sidebar state
   var sidebar = document.getElementById('sidebar');
@@ -313,6 +276,7 @@ function initSidebar() {
   var sidebar  = document.getElementById('sidebar');
   var overlay  = document.getElementById('overlay');
   var menuBtn  = document.getElementById('menuToggle');
+  var closeBtn = document.getElementById('sidebarClose');
 
   if (!sidebar) {
     console.error('[Nexus] sidebar element not found!');
@@ -323,10 +287,14 @@ function initSidebar() {
 
   function openSidebar() {
     sidebar.classList.add('open');
-    // On mobile, show overlay behind sidebar
     if (overlay && !isDesktop()) {
       overlay.style.display = 'block';
-      overlay.style.opacity = '1';
+      // Double rAF ensures display:block is painted before opacity transition
+      requestAnimationFrame(function() {
+        requestAnimationFrame(function() {
+          overlay.style.opacity = '1';
+        });
+      });
     }
   }
 
@@ -342,45 +310,38 @@ function initSidebar() {
     }
   }
 
-  // Desktop: sidebar always visible (no .open class needed since no transform)
+  // Desktop: always open on start
   if (isDesktop()) {
     sidebar.classList.add('open');
-    if (overlay) { overlay.style.display = 'none'; overlay.style.opacity = '0'; }
+    if (overlay) overlay.style.display = 'none';
   }
 
-  // Menu toggle
+  // Menu toggle: on desktop toggles sidebar, on mobile opens
   if (menuBtn) {
-    menuBtn.addEventListener('click', function(e) {
-      e.stopPropagation();
-      if (!isDesktop()) {
-        if (sidebar.classList.contains('open')) {
-          closeSidebar();
-        } else {
-          openSidebar();
-        }
+    menuBtn.addEventListener('click', function() {
+      if (sidebar.classList.contains('open') && !isDesktop()) {
+        closeSidebar();
+      } else if (!sidebar.classList.contains('open')) {
+        openSidebar();
+      } else if (isDesktop()) {
+        // On desktop, toggle sidebar visibility
+        sidebar.classList.remove('open');
       }
     });
   }
 
-  // Overlay click closes sidebar
-  if (overlay) {
-    overlay.addEventListener('click', closeSidebar);
-  }
+  if (closeBtn) closeBtn.addEventListener('click', closeSidebar);
+  if (overlay)  overlay.addEventListener('click', closeSidebar);
 
-  // Escape key closes sidebar on mobile
   document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape' && !isDesktop()) closeSidebar();
   });
 
-  // On resize: ensure desktop always shows sidebar
+  // On resize: keep sidebar open on desktop, close on mobile
   window.addEventListener('resize', function() {
     if (isDesktop()) {
       sidebar.classList.add('open');
-      if (overlay) { overlay.style.display = 'none'; overlay.style.opacity = '0'; }
-    } else {
-      // On mobile, hide sidebar and overlay on resize
-      sidebar.classList.remove('open');
-      if (overlay) { overlay.style.display = 'none'; overlay.style.opacity = '0'; }
+      if (overlay) { overlay.style.opacity = '0'; overlay.style.display = 'none'; }
     }
   });
 
@@ -402,7 +363,14 @@ function startSessionTimer() {
 }
 
 // ── Context Bar ────────────────────────────────────────────
-
+function initContextBar() {
+  $qa('.ctx-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      $qa('.ctx-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    });
+  });
+}
 
 // ── Token counter update ───────────────────────────────────
 function updateTokenCount(n) {

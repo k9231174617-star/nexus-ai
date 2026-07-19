@@ -334,8 +334,8 @@ async function callAPI(messages, agentType) {
     }
   }
   
-  // No API key configured
-  throw new Error('NO_API_KEY');
+  // If no API key or all API calls failed
+  throw new Error('NO_API_KEY: Добавьте API ключ в Settings');
 }
 
 // ── Custom API Call ────────────────────────────────────────
@@ -389,7 +389,6 @@ async function callCustomAPI(messages, agentType, settings) {
   var data = await res.json();
   return (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) || 'No response';
 }
-
 
 // ── Model Selector ─────────────────────────────────────────
 var modelSelectorInitialized = false;

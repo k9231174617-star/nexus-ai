@@ -112,7 +112,7 @@
     }
 
     function getMainPanel() {
-        return document.querySelector('.tab-panel.active') || document.querySelector('.app-content');
+        return document.querySelector('.tab-content.active') || document.querySelector('.app-content');
     }
     console.log('[Trading Plugin] Loaded');
 })();

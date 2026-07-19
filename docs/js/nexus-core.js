@@ -459,7 +459,7 @@ Min SDK: 24 | Target SDK: 33
 
     // ─── Utils ──────────────────────────────────────────────
     getMainPanel() {
-        return document.querySelector('.tab-panel.active') || document.querySelector('main > *:last-child') || document.querySelector('.app-content');
+        return document.querySelector('.tab-content.active') || document.querySelector('main > *:last-child') || document.querySelector('.app-content');
     },
 
     getDummyTasks() {

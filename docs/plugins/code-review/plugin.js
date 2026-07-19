@@ -27,7 +27,7 @@
     }]);
 
     function showReviewPanel() {
-        const main = document.querySelector('.tab-panel.active');
+        const main = document.querySelector('.tab-content.active');
         if (!main) return;
         main.innerHTML = `
             <div class="review-panel" style="padding:20px">

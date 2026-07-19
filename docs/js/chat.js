@@ -153,6 +153,16 @@ async function sendMainChat() {
       AppState.injectedContext = null;
     }
 
+    // Include attached file info
+    var fileInput = document.getElementById('fileInput');
+    if (fileInput && fileInput.files && fileInput.files.length > 0) {
+      var file = fileInput.files[0];
+      prompt = '[User attached file: ' + file.name + ' (' + file.type + ', ' + Math.round(file.size/1024) + 'KB)]\n\n' + prompt;
+      fileInput.value = '';
+      var preview = document.getElementById('attachmentPreview');
+      if (preview) preview.style.display = 'none';
+    }
+
     var typingEl = chatMessages ? showTyping(chatMessages) : null;
     var t0 = Date.now();
 

@@ -97,6 +97,52 @@ const $ = id => document.getElementById(id);
 const $q = sel => document.querySelector(sel);
 const $qa = sel => document.querySelectorAll(sel);
 
+// ── Attach Button ────────────────────────────────────────
+function initAttachButton() {
+  var attachBtn = document.getElementById('attachBtn');
+  var fileInput = document.getElementById('fileInput');
+  if (!attachBtn || !fileInput) return;
+
+  attachBtn.addEventListener('click', function() {
+    fileInput.click();
+  });
+
+  fileInput.addEventListener('change', function() {
+    var files = fileInput.files;
+    if (!files || files.length === 0) return;
+    var file = files[0];
+
+    // Show attachment preview
+    var preview = document.getElementById('attachmentPreview');
+    var nameEl = document.getElementById('attachName');
+    var removeBtn = document.getElementById('removeAttach');
+    if (preview) preview.style.display = 'flex';
+    if (nameEl) nameEl.textContent = file.name;
+
+    if (removeBtn) {
+      removeBtn.onclick = function() {
+        preview.style.display = 'none';
+        fileInput.value = '';
+      };
+    }
+
+    // If image, show thumbnail
+    if (file.type.startsWith('image/')) {
+      var reader = new FileReader();
+      reader.onload = function(e) {
+        var imgEl = document.getElementById('attachThumb');
+        if (imgEl) {
+          imgEl.src = e.target.result;
+          imgEl.style.display = 'block';
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+
+    console.log('[Nexus] File attached:', file.name, file.type, file.size);
+  });
+}
+
 // ── Init Session (placeholder) ─────────────────────────────
 function initSession() {
   console.log('[Nexus] initSession (no-op)');
@@ -113,6 +159,7 @@ document.addEventListener('DOMContentLoaded', () => {
   try { initContextBar(); } catch(e) { console.error('[Nexus] initContextBar:', e); }
   try { populateFiles(); } catch(e) { console.error('[Nexus] populateFiles:', e); }
   try { startSessionTimer(); } catch(e) { console.error('[Nexus] startSessionTimer:', e); }
+  try { initAttachButton(); } catch(e) { console.error('[Nexus] initAttachButton:', e); }
   
   console.log('[Nexus] init complete');
   

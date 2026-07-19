@@ -25,51 +25,8 @@
       .catch(function(e) { console.log('[Config] No server config:', e); });
   })();
 </script>
-<script>
-    // Global error handler for debugging
-    window.addEventListener('error', function(e) {
-      var d = document.getElementById('debugLog');
-      if (!d) {
-        d = document.createElement('div');
-        d.id = 'debugLog';
-        d.style.cssText = 'position:fixed;bottom:0;left:0;right:0;background:#1a0a0f;color:#FF4466;font:11px monospace;padding:8px;z-index:9999;max-height:120px;overflow:auto;border-top:1px solid #FF0A2F;';
-        document.body.appendChild(d);
-      }
-      var msg = '[JS Error] ' + (e.message || e.error || e) + ' at ' + (e.filename || '') + ':' + (e.lineno || '');
-      d.innerHTML = d.innerHTML + '<div>' + msg + '</div>';
-      d.scrollTop = d.scrollHeight;
-    });
-    window.onunhandledrejection = function(e) {
-      var d = document.getElementById('debugLog');
-      if (d) d.innerHTML = d.innerHTML + '<div>[Promise] ' + e.reason + '</div>';
-    };
-  </script>
-  <script>
-    // Sync-load server config before anything else
-    (function() {
-      try {
-        var xhr = new XMLHttpRequest();
-        xhr.open('GET', '/api/config', false);
-        xhr.send();
-        if (xhr.status === 200) {
-          var cfg = JSON.parse(xhr.responseText);
-          var s;
-          try { s = JSON.parse(localStorage.getItem('nexus_settings') || '{}'); } catch(e) { s = {}; }
-          if (!s.apiKey || s.apiKey.length < 10) {
-            s.apiKey = cfg.apiKey;
-            s.endpoint = cfg.endpoint || 'https://openrouter.ai/api/v1/chat/completions';
-            s.mainModel = cfg.mainModel;
-            s.codeModel = cfg.codeModel;
-            s.uniModel = cfg.uniModel;
-            localStorage.setItem('nexus_settings', JSON.stringify(s));
-          } else if (!s.endpoint) {
-            s.endpoint = cfg.endpoint || 'https://openrouter.ai/api/v1/chat/completions';
-            localStorage.setItem('nexus_settings', JSON.stringify(s));
-          }
-        }
-      } catch(e) { console.warn('Config load failed:', e); }
-    })();
-  </script>
+
+
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <title>NEXUS AI — Agent Dashboard</title>
   <link rel="stylesheet" href="styles/main.css"/>
@@ -363,8 +320,6 @@
               </div>
             </div>
             <button class="send-btn" id="sendBtn" aria-label="Send">
-              <svg width="20" height="20" viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" fill="currentColor"/></svg>
-            </button>
               <svg width="20" height="20" viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" fill="currentColor"/></svg>
             </button>
           </div>
@@ -799,14 +754,14 @@
   <!-- Overlay for sidebar on mobile -->
   <div class="overlay" id="overlay"></div>
 
-  <script src="js/skill-registry.js"></script>
-  <script src="js/plugins/plugin-manager.js"></script>
   <script src="js/app.js"></script>
   <script src="js/chat.js"></script>
   <script src="js/cli.js"></script>
   <script src="js/files.js"></script>
   <script src="js/settings.js"></script>
+  <script src="js/plugins/plugin-manager.js"></script>
   <script src="js/nexus-core.js"></script>
+  <script src="js/skill-registry.js"></script>
   <script src="js/memory.js"></script>
   <script src="js/planner.js"></script>
   <script src="js/sandbox.js"></script>
@@ -828,7 +783,18 @@
 
 
 
-  
+  <script>
+    // Minimal status indicator — sidebar and chat are handled by app.js and chat.js
+    document.addEventListener('DOMContentLoaded', function() {
+      var el = document.getElementById('jsStatus');
+      if (el) {
+        el.textContent = 'JS ✓ ' + new Date().toLocaleTimeString();
+        el.style.color = '#44dd88';
+        el.style.borderColor = 'rgba(68,221,136,0.3)';
+        el.style.opacity = '1';
+      }
+    });
+  </script>
 
 </body>
 </html>
